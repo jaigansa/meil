@@ -3,6 +3,15 @@
  * Mobile-First, Touch-Optimized, 100dvh Full Viewport, 3-Screen Snap Track
  */
 
+@font-face {
+  font-family: 'Samaano';
+  src: url('../fonts/Samaano.woff2') format('woff2'),
+       url('https://fonts.atipra.in/woff/Samaano%5Bslnt%2Cwdth%2Cwght%5D.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --tui-bg: #000000;
   --tui-surface: #0a0a04;
@@ -12,7 +21,7 @@
   --tui-yellow-dim: #7a6800;
   --tui-yellow-dark: #262100;
   --tui-danger: #ff3b00;
-  --tui-font: ui-monospace, 'SF Mono', 'Roboto Mono', 'Cascadia Code', 'Courier New', monospace;
+  --tui-font: 'Samaano', ui-monospace, 'SF Mono', 'Roboto Mono', 'Cascadia Code', 'Courier New', monospace;
 }
 
 * {
