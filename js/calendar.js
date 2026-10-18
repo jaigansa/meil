@@ -104,6 +104,7 @@ class CalendarView {
   render() {
     this.renderCalendarGrid();
     this.renderRemindersForSelectedDate();
+    if (window.lucide) window.lucide.createIcons();
   }
 
   renderCalendarGrid() {
@@ -227,19 +228,19 @@ class CalendarView {
           <div class="tui-card-title">${this.escapeHtml(item.title)}</div>
           ${item.details ? `<div class="tui-card-details">${this.escapeHtml(item.details)}</div>` : ''}
           <div class="tui-card-actions">
-            <button class="tui-btn ${item.isCompleted ? 'btn-active' : ''}" data-action="toggle-done">
-              ${item.isCompleted ? 'UNDO' : 'DONE'}
+            <button class="tui-btn btn-icon ${item.isCompleted ? 'btn-active' : ''}" data-action="toggle-done" title="${item.isCompleted ? 'Undo' : 'Complete'}">
+              <i data-lucide="${item.isCompleted ? 'rotate-ccw' : 'check'}"></i>
             </button>
             ${!item.isCompleted ? `
-              <button class="tui-btn" data-action="snooze-10">
-                +10M
+              <button class="tui-btn btn-icon" data-action="snooze-10" title="Snooze 10 minutes">
+                <i data-lucide="clock"></i>
               </button>
-              <button class="tui-btn" data-action="snooze-1h">
-                +1H
+              <button class="tui-btn btn-icon" data-action="snooze-1h" title="Snooze 1 hour">
+                <i data-lucide="timer"></i>
               </button>
             ` : ''}
-            <button class="tui-btn btn-danger" data-action="delete">
-              DEL
+            <button class="tui-btn btn-icon btn-danger" data-action="delete" title="Delete">
+              <i data-lucide="trash-2"></i>
             </button>
           </div>
         </div>

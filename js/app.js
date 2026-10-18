@@ -14,6 +14,7 @@ class AppCoordinator {
     this.updateHeaderMetrics();
     this.setupGlobalControls();
     this.setupSettingsActions();
+    if (window.lucide) window.lucide.createIcons();
 
     window.addEventListener('vault-updated', () => {
       this.updateHeaderMetrics();
@@ -61,8 +62,10 @@ class AppCoordinator {
 
     if (notifStatusEl) {
       const isGranted = window.notifier && window.notifier.hasNotificationPermission();
-      notifStatusEl.textContent = isGranted ? 'NOTIF: ON' : 'NOTIF: OFF';
+      notifStatusEl.innerHTML = `<i data-lucide="${isGranted ? 'bell' : 'bell-off'}"></i>`;
+      notifStatusEl.title = isGranted ? 'Notifications: ON' : 'Notifications: OFF (Click to Enable)';
       notifStatusEl.style.color = isGranted ? 'var(--tui-yellow)' : 'var(--tui-yellow-dim)';
+      if (window.lucide) window.lucide.createIcons({ root: notifStatusEl });
     }
 
     // Update settings screen summary stats

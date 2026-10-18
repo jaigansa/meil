@@ -411,7 +411,22 @@ body {
 
 .btn-icon {
   min-width: 44px;
-  padding: 0 10px;
+  min-height: 44px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lucide {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  display: block;
 }
 
 /* Multi-column Form Grids */

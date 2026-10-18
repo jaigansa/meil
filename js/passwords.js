@@ -153,12 +153,13 @@ class PasswordVault {
     }
 
     if (btnElement) {
-      const orig = btnElement.textContent;
-      btnElement.textContent = 'COPIED!';
+      btnElement.innerHTML = '<i data-lucide="check"></i>';
       btnElement.classList.add('btn-highlight');
+      if (window.lucide) window.lucide.createIcons({ root: btnElement });
       setTimeout(() => {
-        btnElement.textContent = orig;
+        btnElement.innerHTML = '<i data-lucide="copy"></i>';
         btnElement.classList.remove('btn-highlight');
+        if (window.lucide) window.lucide.createIcons({ root: btnElement });
       }, 1500);
     }
 
@@ -227,14 +228,14 @@ class PasswordVault {
           </div>
           ${p.notes ? `<div class="pass-notes"><span class="tui-dim">Note:</span> ${this.escapeHtml(p.notes)}</div>` : ''}
           <div class="tui-card-actions pass-card-actions">
-            <button class="tui-btn btn-highlight" data-action="copy-pass">
-              COPY
+            <button class="tui-btn btn-icon btn-highlight" data-action="copy-pass" title="Copy Password">
+              <i data-lucide="copy"></i>
             </button>
-            <button class="tui-btn" data-action="toggle-show">
-              ${isRevealed ? 'HIDE' : 'SHOW'}
+            <button class="tui-btn btn-icon" data-action="toggle-show" title="${isRevealed ? 'Hide Password' : 'Show Password'}">
+              <i data-lucide="${isRevealed ? 'eye-off' : 'eye'}"></i>
             </button>
-            <button class="tui-btn btn-danger" data-action="delete-pass">
-              DEL
+            <button class="tui-btn btn-icon btn-danger" data-action="delete-pass" title="Delete Credential">
+              <i data-lucide="trash-2"></i>
             </button>
           </div>
         </div>
@@ -242,6 +243,7 @@ class PasswordVault {
     });
 
     container.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
 
     // Attach listeners
     container.querySelectorAll('.pass-card').forEach(card => {
