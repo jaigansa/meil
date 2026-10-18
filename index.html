@@ -14,7 +14,7 @@
   <!-- Persistent Top Header & Screen Indicator -->
   <header class="tui-header">
     <div class="header-top-row">
-      <span class="header-app-title">[●] MEMORY_CORE</span>
+      <span class="header-app-title">[#] MEMORY_CORE</span>
       <div class="header-top-right">
         <span class="header-status-pill" id="header-gh-status">[GH: LOCAL]</span>
         <button class="header-interactive-btn" id="header-notif-status" title="Toggle Notifications">[NOTIF: OFF]</button>
@@ -22,22 +22,22 @@
     </div>
 
     <div class="header-stats-row">
-      <span id="header-clock">⏰ 00:00:00</span>
+      <span id="header-clock">00:00:00</span>
       <span id="header-rem-count">REM: 0</span>
       <span id="header-pass-count">PASS: 0</span>
     </div>
 
     <div class="header-swipe-indicator">
-      <button class="tui-arrow-btn" id="swipe-arrow-left" aria-label="Previous Screen">[ ◄ ]</button>
+      <button class="tui-arrow-btn" id="swipe-arrow-left" aria-label="Previous Screen">[ &lt; ]</button>
       <div class="swipe-title-wrap">
         <span id="swipe-screen-title">[ 1/3 : CALENDAR ]</span>
         <div class="swipe-dots" id="swipe-dots">
-          <span class="dot active">●</span>
-          <span class="dot">○</span>
-          <span class="dot">○</span>
+          <span class="dot active">#</span>
+          <span class="dot">-</span>
+          <span class="dot">-</span>
         </div>
       </div>
-      <button class="tui-arrow-btn" id="swipe-arrow-right" aria-label="Next Screen">[ ► ]</button>
+      <button class="tui-arrow-btn" id="swipe-arrow-right" aria-label="Next Screen">[ &gt; ]</button>
     </div>
   </header>
 
@@ -50,12 +50,12 @@
     <section class="tui-screen" id="screen-calendar">
       <div class="tui-panel">
         <div class="cal-nav-bar">
-          <button class="tui-btn cal-nav-btn" id="cal-prev">[ ◄ ]</button>
+          <button class="tui-btn cal-nav-btn" id="cal-prev">[ &lt; ]</button>
           <div class="cal-title-group">
             <span class="cal-month-header" id="cal-month-title">OCTOBER 2026</span>
             <button class="tui-btn cal-today-btn" id="cal-today">[ TODAY ]</button>
           </div>
-          <button class="tui-btn cal-nav-btn" id="cal-next">[ ► ]</button>
+          <button class="tui-btn cal-nav-btn" id="cal-next">[ &gt; ]</button>
         </div>
 
         <div class="cal-grid" id="cal-grid">
@@ -77,7 +77,7 @@
       <!-- Quick Add Reminder Form -->
       <div class="tui-panel">
         <div class="tui-panel-header">
-          <span>>_ QUICK ADD REMINDER [<span id="quick-add-target-date">TODAY</span>]</span>
+          <span>&gt;_ QUICK ADD REMINDER [<span id="quick-add-target-date">TODAY</span>]</span>
         </div>
 
         <form id="quick-reminder-form">
@@ -106,20 +106,20 @@
           <div class="tui-form-group">
             <label class="tui-label">PRIORITY:</label>
             <div class="tui-radio-group">
-              <label><input type="radio" name="reminder-priority" value="NORMAL" checked> [•] NORMAL</label>
+              <label><input type="radio" name="reminder-priority" value="NORMAL" checked> [-] NORMAL</label>
               <label><input type="radio" name="reminder-priority" value="HIGH"> [*] HIGH</label>
               <label><input type="radio" name="reminder-priority" value="URGENT"> [!] URGENT</label>
             </div>
           </div>
 
           <button type="submit" class="tui-btn btn-highlight tui-btn-full">
-            [ >>> COMMIT REMINDER (ENTER) <<< ]
+            [ &gt;&gt;&gt; COMMIT REMINDER (ENTER) &lt;&lt;&lt; ]
           </button>
         </form>
       </div>
 
       <div class="tui-box-empty">
-        ( ◄◄ Swipe Left for Passwords Vault ►► )
+        ( &lt;&lt; Swipe Left for Passwords Vault &gt;&gt; )
       </div>
     </section>
 
@@ -134,7 +134,7 @@
       <!-- Search Bar -->
       <div class="pass-search-bar">
         <input type="text" class="tui-input" id="pass-search-input" placeholder=">_ SEARCH PASSWORDS..." autocomplete="off">
-        <button class="tui-btn btn-icon" id="pass-search-clear">[ ✕ ]</button>
+        <button class="tui-btn btn-icon" id="pass-search-clear">[ X ]</button>
       </div>
 
       <!-- Action Bar -->
@@ -143,14 +143,14 @@
           [ + NEW CREDENTIAL ]
         </button>
         <button class="tui-btn" id="btn-gen-quick">
-          [ 🎲 GEN PASSWORD ]
+          [ GEN PASSWORD ]
         </button>
       </div>
 
       <!-- Collapsible Add Credential Form -->
       <div class="tui-panel" id="add-pass-container" style="display: none;">
         <div class="tui-panel-header">
-          <span>>_ INSERT NEW CREDENTIAL</span>
+          <span>&gt;_ INSERT NEW CREDENTIAL</span>
         </div>
 
         <form id="add-password-form">
@@ -168,7 +168,7 @@
             <label class="tui-label">PASSWORD / SECRET:</label>
             <div style="display: flex; gap: 6px;">
               <input type="password" class="tui-input" id="pass-input-value" placeholder="Enter or generate secret" required autocomplete="new-password">
-              <button type="button" class="tui-btn btn-icon" id="btn-form-gen-pass">[ 🎲 ]</button>
+              <button type="button" class="tui-btn btn-icon" id="btn-form-gen-pass">[ GEN ]</button>
             </div>
           </div>
 
@@ -178,7 +178,7 @@
           </div>
 
           <button type="submit" class="tui-btn btn-highlight tui-btn-full">
-            [ >>> SAVE TO VAULT <<< ]
+            [ &gt;&gt;&gt; SAVE TO VAULT &lt;&lt;&lt; ]
           </button>
         </form>
       </div>
@@ -194,7 +194,7 @@
       </div>
 
       <div class="tui-box-empty">
-        ( ◄◄ Swipe Left for Settings | Swipe Right for Calendar ►► )
+        ( &lt;&lt; Swipe Left for Settings | Swipe Right for Calendar &gt;&gt; )
       </div>
     </section>
 
@@ -216,7 +216,7 @@
 
       <!-- GitHub Repo Sync -->
       <div class="settings-section">
-        <div class="settings-section-title">☁ GITHUB REPOSITORY SYNC</div>
+        <div class="settings-section-title">> GITHUB REPOSITORY SYNC</div>
         <p class="tui-dim" style="font-size: 11px; margin-bottom: 8px;">
           Direct REST API sync with your GitHub repo (stores encrypted/plain vault JSON).
         </p>
@@ -236,7 +236,7 @@
             <label class="tui-label">BRANCH:</label>
             <input type="text" class="tui-input" id="gh-branch-input" value="main">
           </div>
-          <div class="tui-form-group">
+          <div class="tui-form-group" style="flex: 1;">
             <label class="tui-label">FILE PATH:</label>
             <input type="text" class="tui-input" id="gh-path-input" value="memory_vault.json">
           </div>
@@ -253,25 +253,25 @@
 
         <div class="settings-btn-grid">
           <button class="tui-btn" id="btn-gh-push">
-            [ ↑ PUSH TO GH ]
+            [ ^ PUSH TO GH ]
           </button>
           <button class="tui-btn" id="btn-gh-pull">
-            [ ↓ PULL FROM GH ]
+            [ v PULL FROM GH ]
           </button>
         </div>
       </div>
 
       <!-- Unix Pass CLI Integration -->
       <div class="settings-section">
-        <div class="settings-section-title">🔐 UNIX PASS CLI BRIDGE</div>
+        <div class="settings-section-title">> UNIX PASS CLI BRIDGE</div>
         <p class="tui-dim" style="font-size: 11px; margin-bottom: 8px;">
           Export all credentials & memories into an automated script for ~/.password-store.
         </p>
         <button class="tui-btn tui-btn-full" id="btn-export-pass-script">
-          [ ↓ EXPORT PASS CLI SCRIPT (pass_import.sh) ]
+          [ v EXPORT PASS CLI SCRIPT (pass_import.sh) ]
         </button>
         <button class="tui-btn tui-btn-full" id="btn-pass-info" style="margin-top: 6px;">
-          [ ℹ HOW TO SYNC WITH LOCAL PASS CLI ]
+          [ INFO: HOW TO SYNC WITH LOCAL PASS CLI ]
         </button>
       </div>
 
@@ -284,10 +284,10 @@
         </div>
         <div class="settings-btn-grid">
           <button class="tui-btn" id="btn-test-sound">
-            [ 🔊 TEST CHIME ]
+            [ TEST CHIME ]
           </button>
           <button class="tui-btn" id="btn-test-notif">
-            [ 🔔 TEST NOTIF ]
+            [ TEST NOTIF ]
           </button>
         </div>
       </div>
@@ -297,24 +297,24 @@
         <div class="settings-section-title">BACKUP & MAINTENANCE</div>
         <div class="settings-btn-grid" style="margin-bottom: 8px; margin-top: 0;">
           <button class="tui-btn" id="btn-export-json">
-            [ ↓ EXPORT JSON ]
+            [ v EXPORT JSON ]
           </button>
           <button class="tui-btn" id="btn-import-json">
-            [ ↑ IMPORT JSON ]
+            [ ^ IMPORT JSON ]
           </button>
           <input type="file" id="file-import-input" accept=".json" style="display: none;">
         </div>
 
         <button class="tui-btn btn-danger tui-btn-full" id="btn-purge-completed" style="margin-bottom: 6px;">
-          [ ⚠ PURGE COMPLETED REMINDERS ]
+          [ ! PURGE COMPLETED REMINDERS ]
         </button>
         <button class="tui-btn btn-danger tui-btn-full" id="btn-reset-all">
-          [ ☠ FACTORY RESET MEMORY CORE ]
+          [ !!! FACTORY RESET MEMORY CORE ]
         </button>
       </div>
 
       <div class="tui-box-empty">
-        ( ◄◄ Swipe Right to Return to Passwords & Calendar )
+        ( &lt;&lt; Swipe Right to Return to Passwords & Calendar )
       </div>
     </section>
 
@@ -324,7 +324,7 @@
   <dialog class="tui-modal" id="alarm-dialog">
     <div class="tui-modal-header">
       <span>[!] ALARM TRIGGERED</span>
-      <span>⏰ NOW</span>
+      <span>NOW</span>
     </div>
     <div class="tui-modal-body">
       <div class="alarm-title" id="alarm-item-title">Title Here</div>
@@ -332,7 +332,7 @@
       <div class="alarm-details-info" id="alarm-item-details" style="display: none;"></div>
 
       <button class="tui-btn btn-highlight tui-btn-full" id="btn-alarm-done">
-        [ ✓ MARK COMPLETED ]
+        [ OK MARK COMPLETED ]
       </button>
 
       <div class="alarm-snooze-title">QUICK SNOOZE:</div>
@@ -344,7 +344,7 @@
       </div>
 
       <button class="tui-btn btn-danger tui-btn-full" id="btn-alarm-dismiss">
-        [ × DISMISS ALARM ]
+        [ X DISMISS ALARM ]
       </button>
     </div>
   </dialog>

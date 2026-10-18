@@ -181,14 +181,14 @@ class GitHubSyncService {
       this.currentSha = resData.content ? resData.content.sha : null;
       window.storage.updateSettings({ lastSyncedAt: Date.now() });
 
-      this.updateStatusBadge('SYNCED ☁');
+      this.updateStatusBadge('SYNCED');
       if (window.audio) window.audio.playSuccess();
       if (isUserInitiated) {
         alert('[TUI OK] Vault successfully pushed to GitHub repository!');
       }
     } catch (err) {
       console.error('[GITHUB] Push failed:', err);
-      this.updateStatusBadge('SYNC FAILED ⚠');
+      this.updateStatusBadge('SYNC FAILED !');
       if (isUserInitiated) {
         alert(`[TUI ERROR] GitHub Push Failed: ${err.message}`);
       }
@@ -240,14 +240,14 @@ class GitHubSyncService {
       }
 
       window.storage.updateSettings({ lastSyncedAt: Date.now() });
-      this.updateStatusBadge('SYNCED ☁');
+      this.updateStatusBadge('SYNCED');
       if (window.audio) window.audio.playSuccess();
       if (isUserInitiated) {
         alert(`[TUI OK] Successfully pulled from GitHub! (${importResult.countReminders} Reminders, ${importResult.countPasswords} Passwords)`);
       }
     } catch (err) {
       console.error('[GITHUB] Pull failed:', err);
-      this.updateStatusBadge('PULL FAILED ⚠');
+      this.updateStatusBadge('PULL FAILED !');
       if (isUserInitiated) {
         alert(`[TUI ERROR] GitHub Pull Failed: ${err.message}`);
       }
@@ -266,7 +266,7 @@ class GitHubSyncService {
       if (!settings.githubToken || !settings.githubRepo) {
         text = 'LOCAL ONLY';
       } else if (settings.lastSyncedAt) {
-        text = 'SYNCED ☁';
+        text = 'SYNCED';
       } else {
         text = 'GH CONFIGURED';
       }

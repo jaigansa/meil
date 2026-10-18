@@ -28,7 +28,7 @@ class AppCoordinator {
       const hrs = String(now.getHours()).padStart(2, '0');
       const mins = String(now.getMinutes()).padStart(2, '0');
       const secs = String(now.getSeconds()).padStart(2, '0');
-      clockEl.textContent = `⏰ ${hrs}:${mins}:${secs}`;
+      clockEl.textContent = `${hrs}:${mins}:${secs}`;
     };
     updateTime();
     setInterval(updateTime, 1000);
@@ -114,7 +114,7 @@ class AppCoordinator {
           if (granted) {
             new Notification('[!] TEST ALARM: MEMORY CORE', {
               body: 'System notifications and sound are operational!',
-              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".9em" font-size="90" fill="%23ffd700">⏰</text></svg>'
+              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">[!]</text></svg>'
             });
             if (window.audio) window.audio.playSuccess();
           } else {

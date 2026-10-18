@@ -138,10 +138,10 @@ class SwipeController {
       const dots = dotsContainer.querySelectorAll('.dot');
       dots.forEach((dot, idx) => {
         if (idx === index) {
-          dot.textContent = '●';
+          dot.textContent = '#';
           dot.classList.add('active');
         } else {
-          dot.textContent = '○';
+          dot.textContent = '-';
           dot.classList.remove('active');
         }
       });

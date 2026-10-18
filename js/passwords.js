@@ -213,12 +213,12 @@ class PasswordVault {
     let html = '';
     items.forEach(p => {
       const isRevealed = this.revealedIds.has(p.id);
-      const displayPass = isRevealed ? this.escapeHtml(p.password) : '••••••••••••••••';
+      const displayPass = isRevealed ? this.escapeHtml(p.password) : '****************';
 
       html += `
         <div class="tui-card pass-card" data-id="${p.id}">
           <div class="tui-card-header">
-            <span class="pass-path">🔐 ${this.escapeHtml(p.path)}</span>
+            <span class="pass-path">> ${this.escapeHtml(p.path)}</span>
           </div>
           ${p.username ? `<div class="pass-row"><span class="tui-dim">User:</span> ${this.escapeHtml(p.username)}</div>` : ''}
           <div class="pass-row">
@@ -228,13 +228,13 @@ class PasswordVault {
           ${p.notes ? `<div class="pass-notes"><span class="tui-dim">Note:</span> ${this.escapeHtml(p.notes)}</div>` : ''}
           <div class="tui-card-actions pass-card-actions">
             <button class="tui-btn btn-highlight" data-action="copy-pass">
-              [ 📋 COPY ]
+              [ COPY ]
             </button>
             <button class="tui-btn" data-action="toggle-show">
-              ${isRevealed ? '[ 🙈 HIDE ]' : '[ 👁 SHOW ]'}
+              ${isRevealed ? '[ HIDE ]' : '[ SHOW ]'}
             </button>
             <button class="tui-btn btn-danger" data-action="delete-pass">
-              [ ✕ DEL ]
+              [ DEL ]
             </button>
           </div>
         </div>

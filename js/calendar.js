@@ -212,34 +212,34 @@ class CalendarView {
       const isOverdue = !item.isCompleted && (item.snoozedUntil || item.dueAt) < Date.now();
       const statusBoxClass = isOverdue ? 'item-overdue' : (item.isCompleted ? 'item-completed' : 'item-active');
 
-      const repeatTag = item.repeat !== 'NONE' ? `<span class="tui-tag">[⟳ ${item.repeat}]</span>` : '';
+      const repeatTag = item.repeat !== 'NONE' ? `<span class="tui-tag">[RPT: ${item.repeat}]</span>` : '';
       const priorityTag = item.priority === 'URGENT' ? '<span class="tui-tag tag-urgent">[! URGENT]</span>' : (item.priority === 'HIGH' ? '<span class="tui-tag tag-high">[* HIGH]</span>' : '');
 
       listHtml += `
         <div class="tui-card ${statusBoxClass}" data-id="${item.id}">
           <div class="tui-card-header">
-            <span class="card-time">⏰ ${item.time || '09:00'}</span>
+            <span class="card-time">@ ${item.time || '09:00'}</span>
             ${priorityTag}
             ${repeatTag}
             ${isOverdue ? '<span class="tag-overdue-blink">[! OVERDUE !]</span>' : ''}
-            ${item.isCompleted ? '<span class="tag-done">[✓ COMPLETED]</span>' : ''}
+            ${item.isCompleted ? '<span class="tag-done">[DONE]</span>' : ''}
           </div>
           <div class="tui-card-title">${this.escapeHtml(item.title)}</div>
           ${item.details ? `<div class="tui-card-details">${this.escapeHtml(item.details)}</div>` : ''}
           <div class="tui-card-actions">
             <button class="tui-btn ${item.isCompleted ? 'btn-active' : ''}" data-action="toggle-done">
-              ${item.isCompleted ? '[ ↺ UNDO ]' : '[ ✓ DONE ]'}
+              ${item.isCompleted ? '[ UNDO ]' : '[ DONE ]'}
             </button>
             ${!item.isCompleted ? `
               <button class="tui-btn" data-action="snooze-10">
-                [ 💤 +10M ]
+                [ +10M ]
               </button>
               <button class="tui-btn" data-action="snooze-1h">
-                [ 💤 +1H ]
+                [ +1H ]
               </button>
             ` : ''}
             <button class="tui-btn btn-danger" data-action="delete">
-              [ ✕ DEL ]
+              [ DEL ]
             </button>
           </div>
         </div>
