@@ -50,6 +50,9 @@
     <!-- ========================================== -->
     <section class="tui-screen" id="screen-calendar">
       <div class="tui-panel">
+        <div class="tui-panel-header">
+          <span>CALENDAR // MONTH VIEW</span>
+        </div>
         <div class="cal-nav-bar">
           <button class="tui-btn cal-nav-btn" id="cal-prev" title="Previous Month"><i data-lucide="chevron-left"></i></button>
           <div class="cal-title-group">
@@ -129,7 +132,7 @@
     <!-- ========================================== -->
     <section class="tui-screen" id="screen-passwords">
       <div class="tui-section-title">
-        ┌── PASSWORDS & CREDENTIAL VAULT ──────────┐
+        <span>PASSWORDS & CREDENTIAL VAULT</span>
       </div>
 
       <!-- Search Bar -->
@@ -203,10 +206,6 @@
     <!-- SCREEN 3: SETTINGS & GITHUB / PASS SYNC    -->
     <!-- ========================================== -->
     <section class="tui-screen" id="screen-settings">
-      <div class="tui-section-title">
-        ┌── SYSTEM SETTINGS & GITHUB SYNC ─────────┐
-      </div>
-
       <!-- Storage Info -->
       <div class="settings-section">
         <div class="settings-section-title">SYSTEM STATUS</div>
@@ -217,7 +216,7 @@
 
       <!-- GitHub Repo Sync -->
       <div class="settings-section">
-        <div class="settings-section-title">&gt; GITHUB REPOSITORY SYNC</div>
+        <div class="settings-section-title">GITHUB REPOSITORY SYNC</div>
         <p class="tui-dim" style="font-size: 11px; margin-bottom: 8px;">
           Direct REST API sync with your GitHub repo (stores encrypted/plain vault JSON).
         </p>
@@ -264,7 +263,7 @@
 
       <!-- Unix Pass CLI Integration -->
       <div class="settings-section">
-        <div class="settings-section-title">&gt; UNIX PASS CLI BRIDGE</div>
+        <div class="settings-section-title">UNIX PASS CLI BRIDGE</div>
         <p class="tui-dim" style="font-size: 11px; margin-bottom: 8px;">
           Export all credentials & memories into an automated script for ~/.password-store.
         </p>
@@ -324,8 +323,7 @@
   <!-- Interactive TUI Alarm Modal Dialog -->
   <dialog class="tui-modal" id="alarm-dialog">
     <div class="tui-modal-header">
-      <span>! ALARM TRIGGERED</span>
-      <span>NOW</span>
+      <span>! ALARM TRIGGERED // NOW</span>
     </div>
     <div class="tui-modal-body">
       <div class="alarm-title" id="alarm-item-title">Title Here</div>

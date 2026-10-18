@@ -15,7 +15,7 @@
 :root {
   --tui-bg: #000000;
   --tui-surface: #0a0a04;
-  --tui-card-bg: #111105;
+  --tui-card-bg: #000000;
   --tui-yellow: #ffd700;
   --tui-yellow-bright: #ffe600;
   --tui-yellow-dim: #7a6800;
@@ -224,30 +224,62 @@ body {
 
 /* --- TUI Panels & Boxes --- */
 .tui-section-title {
-  font-size: 12px;
+  position: relative;
+  border-top: 1px solid var(--tui-yellow);
+  margin: 16px 0 14px 0;
+  height: 0;
+  text-align: left;
+}
+
+.tui-section-title span {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  left: 10px;
+  background: var(--tui-bg);
+  padding: 0 8px;
+  font-size: 11px;
   font-weight: bold;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
   color: var(--tui-yellow-bright);
+  white-space: nowrap;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
 }
 
 .tui-panel {
+  position: relative;
   border: 1px solid var(--tui-yellow);
   background: var(--tui-card-bg);
-  padding: 10px;
-  margin-bottom: 12px;
+  padding: 16px 10px 10px 10px;
+  margin-top: 14px;
+  margin-bottom: 14px;
 }
 
 .tui-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px dashed var(--tui-yellow-dim);
-  padding-bottom: 5px;
-  margin-bottom: 8px;
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  left: 10px;
+  background: var(--tui-bg);
+  padding: 0 8px;
   font-weight: bold;
   font-size: 11px;
   letter-spacing: 0.5px;
+  color: var(--tui-yellow-bright);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+  border-bottom: none;
+  margin-bottom: 0;
+  line-height: 1;
+  white-space: nowrap;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tui-box-empty {
@@ -668,20 +700,35 @@ body {
 
 /* --- Screen 3: Settings Specific Styling --- */
 .settings-section {
+  position: relative;
   border: 1px solid var(--tui-yellow);
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: 16px 10px 10px 10px;
+  margin-top: 14px;
+  margin-bottom: 14px;
   background: var(--tui-card-bg);
 }
 
 .settings-section-title {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  left: 10px;
+  background: var(--tui-bg);
+  padding: 0 8px;
   font-size: 11px;
   font-weight: bold;
-  margin-bottom: 8px;
   color: var(--tui-yellow-bright);
-  border-bottom: 1px dotted var(--tui-yellow-dim);
-  padding-bottom: 4px;
   letter-spacing: 0.5px;
+  border-bottom: none;
+  margin-bottom: 0;
+  line-height: 1;
+  z-index: 2;
+  white-space: nowrap;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
 }
 
 .settings-row-2col {
@@ -714,6 +761,7 @@ body {
 
 /* --- TUI Alarm Trigger Modal Dialog --- */
 .tui-modal {
+  position: relative;
   margin: auto;
   background: #000;
   border: 2px solid var(--tui-danger);
@@ -721,7 +769,7 @@ body {
   font-family: var(--tui-font);
   width: calc(100vw - 24px);
   max-width: 380px;
-  padding: 0;
+  padding: 18px 12px 14px 12px;
   box-shadow: 0 0 30px rgba(255, 59, 0, 0.6);
   outline: none;
 }
@@ -732,17 +780,26 @@ body {
 }
 
 .tui-modal-header {
-  background: var(--tui-danger);
-  color: #fff;
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  left: 12px;
+  background: #000;
+  color: var(--tui-danger);
   font-weight: bold;
-  padding: 8px 10px;
-  font-size: 12px;
-  display: flex;
-  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 2;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .tui-modal-body {
-  padding: 12px 10px;
+  padding: 0;
 }
 
 .alarm-title {
