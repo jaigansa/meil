@@ -117,7 +117,7 @@ echo "    pass git push origin main"
     URL.revokeObjectURL(url);
 
     if (window.audio) window.audio.playSuccess();
-    alert('[TUI OK] Generated "pass_import.sh" downloaded. Run in terminal with `./pass_import.sh` to import into pass CLI.');
+    alert('OK: Generated "pass_import.sh" downloaded. Run in terminal with `./pass_import.sh` to import into pass CLI.');
   }
 }
 

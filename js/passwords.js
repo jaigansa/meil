@@ -45,7 +45,7 @@ class PasswordVault {
       btnToggleAdd.addEventListener('click', () => {
         const isHidden = formContainer.style.display === 'none';
         formContainer.style.display = isHidden ? 'block' : 'none';
-        btnToggleAdd.textContent = isHidden ? '[ - HIDE FORM ]' : '[ + NEW CREDENTIAL ]';
+        btnToggleAdd.textContent = isHidden ? '- HIDE FORM' : '+ NEW CREDENTIAL';
         if (window.audio) window.audio.playClick();
       });
     }
@@ -71,7 +71,7 @@ class PasswordVault {
         // Open form if closed and populate
         if (formContainer && formContainer.style.display === 'none') {
           formContainer.style.display = 'block';
-          if (btnToggleAdd) btnToggleAdd.textContent = '[ - HIDE FORM ]';
+          if (btnToggleAdd) btnToggleAdd.textContent = '- HIDE FORM';
         }
         generateAndFill();
         if (passInput) passInput.focus();
@@ -113,7 +113,7 @@ class PasswordVault {
     const inputNotes = document.getElementById('pass-input-notes');
 
     if (!inputPath || !inputPath.value.trim()) {
-      alert('[TUI ERROR] Please provide a path/service name (e.g., github.com/user or email/work).');
+      alert('ERROR: Please provide a path/service name (e.g., github.com/user or email/work).');
       return;
     }
 
@@ -154,7 +154,7 @@ class PasswordVault {
 
     if (btnElement) {
       const orig = btnElement.textContent;
-      btnElement.textContent = '[ COPIED! ]';
+      btnElement.textContent = 'COPIED!';
       btnElement.classList.add('btn-highlight');
       setTimeout(() => {
         btnElement.textContent = orig;
@@ -195,7 +195,7 @@ class PasswordVault {
     }
 
     if (countBadge) {
-      countBadge.textContent = `[ TOTAL: ${items.length} ]`;
+      countBadge.textContent = `TOTAL: ${items.length}`;
     }
 
     if (items.length === 0) {
@@ -203,7 +203,7 @@ class PasswordVault {
         <div class="tui-box-empty">
           ┌──────────────────────────────────────────────┐<br>
           │ NO CREDENTIALS FOUND.                        │<br>
-          │ Tap [ + NEW CREDENTIAL ] to add a secret.    │<br>
+          │ Tap + NEW CREDENTIAL to add a secret.        │<br>
           └──────────────────────────────────────────────┘
         </div>
       `;
@@ -228,13 +228,13 @@ class PasswordVault {
           ${p.notes ? `<div class="pass-notes"><span class="tui-dim">Note:</span> ${this.escapeHtml(p.notes)}</div>` : ''}
           <div class="tui-card-actions pass-card-actions">
             <button class="tui-btn btn-highlight" data-action="copy-pass">
-              [ COPY ]
+              COPY
             </button>
             <button class="tui-btn" data-action="toggle-show">
-              ${isRevealed ? '[ HIDE ]' : '[ SHOW ]'}
+              ${isRevealed ? 'HIDE' : 'SHOW'}
             </button>
             <button class="tui-btn btn-danger" data-action="delete-pass">
-              [ DEL ]
+              DEL
             </button>
           </div>
         </div>
@@ -265,7 +265,7 @@ class PasswordVault {
       }
       if (btnDel) {
         btnDel.addEventListener('click', () => {
-          if (confirm(`[TUI WARNING] Delete credential "${item.path}"?`)) {
+          if (confirm(`WARNING: Delete credential "${item.path}"?`)) {
             window.storage.deletePassword(id);
             if (window.audio) window.audio.playClick();
           }

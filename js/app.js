@@ -112,13 +112,13 @@ class AppCoordinator {
         if (window.notifier) {
           const granted = await window.notifier.requestPermission();
           if (granted) {
-            new Notification('[!] TEST ALARM: MEMORY CORE', {
+            new Notification('! TEST ALARM: MEMORY CORE', {
               body: 'System notifications and sound are operational!',
-              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">[!]</text></svg>'
+              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">!</text></svg>'
             });
             if (window.audio) window.audio.playSuccess();
           } else {
-            alert('[TUI ERROR] Notifications permission not granted by browser.');
+            alert('ERROR: Notifications permission not granted by browser.');
           }
         }
       });
@@ -159,10 +159,10 @@ class AppCoordinator {
         reader.onload = (event) => {
           const result = window.storage.importJSON(event.target.result);
           if (result.success) {
-            alert(`[TUI OK] Backup successfully imported!\nReminders: ${result.countReminders}\nPasswords: ${result.countPasswords}`);
+            alert(`OK: Backup successfully imported!\nReminders: ${result.countReminders}\nPasswords: ${result.countPasswords}`);
             if (window.audio) window.audio.playSuccess();
           } else {
-            alert(`[TUI ERROR] Failed to import: ${result.error}`);
+            alert(`ERROR: Failed to import: ${result.error}`);
           }
           fileImportInput.value = '';
         };
@@ -185,9 +185,9 @@ class AppCoordinator {
     const btnPurgeCompleted = document.getElementById('btn-purge-completed');
     if (btnPurgeCompleted) {
       btnPurgeCompleted.addEventListener('click', () => {
-        if (confirm('[TUI PROMPT] Purge all completed reminders?')) {
+        if (confirm('PROMPT: Purge all completed reminders?')) {
           const removed = window.storage.clearCompletedReminders();
-          alert(`[TUI OK] Purged ${removed} completed reminder(s).`);
+          alert(`OK: Purged ${removed} completed reminder(s).`);
           if (window.audio) window.audio.playClick();
         }
       });
@@ -197,10 +197,10 @@ class AppCoordinator {
     const btnResetAll = document.getElementById('btn-reset-all');
     if (btnResetAll) {
       btnResetAll.addEventListener('click', () => {
-        const phrase = prompt('[DANGER ZONE] Type "DELETE" to wipe all data and reset to defaults:');
+        const phrase = prompt('DANGER ZONE: Type "DELETE" to wipe all data and reset to defaults:');
         if (phrase === 'DELETE') {
           window.storage.resetAll();
-          alert('[TUI OK] Memory Core reset completed.');
+          alert('OK: Memory Core reset completed.');
           location.reload();
         }
       });

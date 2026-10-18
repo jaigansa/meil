@@ -22,7 +22,7 @@ class NotifierService {
 
   async requestPermission() {
     if (!('Notification' in window)) {
-      alert('[TUI ERROR] Web Notifications not supported by your browser.');
+      alert('ERROR: Web Notifications not supported by your browser.');
       return false;
     }
     try {
@@ -78,9 +78,9 @@ class NotifierService {
     // 2. Dispatch system / desktop notification
     if (this.hasNotificationPermission()) {
       try {
-        new Notification(`[!] REMINDER DUE: ${item.title}`, {
+        new Notification(`! REMINDER DUE: ${item.title}`, {
           body: `${item.details || 'Scheduled for ' + item.time}\nSwipe into Memory Core to manage.`,
-          icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">[!]</text></svg>',
+          icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">!</text></svg>',
           tag: item.id
         });
       } catch (err) {
@@ -105,7 +105,7 @@ class NotifierService {
       detailsEl.textContent = item.details ? `DETAILS: ${item.details}` : '';
       detailsEl.style.display = item.details ? 'block' : 'none';
     }
-    if (timeEl) timeEl.textContent = `SCHEDULED: ${item.date} @ ${item.time} ${item.repeat !== 'NONE' ? '[' + item.repeat + ']' : ''}`;
+    if (timeEl) timeEl.textContent = `SCHEDULED: ${item.date} @ ${item.time} ${item.repeat !== 'NONE' ? 'RPT: ' + item.repeat : ''}`;
 
     if (typeof dialog.showModal === 'function') {
       try {

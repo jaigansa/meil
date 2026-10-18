@@ -120,7 +120,7 @@ class SwipeController {
   updateHeader(index) {
     const titleEl = document.getElementById('swipe-screen-title');
     if (titleEl && this.screenTitles[index]) {
-      titleEl.textContent = `[ ${this.screenTitles[index]} ]`;
+      titleEl.textContent = `${this.screenTitles[index]}`;
     }
 
     const leftArrow = document.getElementById('swipe-arrow-left');

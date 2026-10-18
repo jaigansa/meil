@@ -103,7 +103,7 @@ class GitHubSyncService {
 
     this.updateStatusBadge();
     if (window.audio) window.audio.playSuccess();
-    alert('[TUI OK] GitHub configuration committed to local settings.');
+    alert('OK: GitHub configuration committed to local settings.');
   }
 
   async getFileSha(repo, path, branch, token) {
@@ -130,7 +130,7 @@ class GitHubSyncService {
     const settings = window.storage.getSettings();
     if (!settings.githubToken || !settings.githubRepo) {
       if (isUserInitiated) {
-        alert('[TUI ERROR] Please configure GitHub Token and Repo in Settings first.');
+        alert('ERROR: Please configure GitHub Token and Repo in Settings first.');
       }
       return;
     }
@@ -184,13 +184,13 @@ class GitHubSyncService {
       this.updateStatusBadge('SYNCED');
       if (window.audio) window.audio.playSuccess();
       if (isUserInitiated) {
-        alert('[TUI OK] Vault successfully pushed to GitHub repository!');
+        alert('OK: Vault successfully pushed to GitHub repository!');
       }
     } catch (err) {
       console.error('[GITHUB] Push failed:', err);
       this.updateStatusBadge('SYNC FAILED !');
       if (isUserInitiated) {
-        alert(`[TUI ERROR] GitHub Push Failed: ${err.message}`);
+        alert(`ERROR: GitHub Push Failed: ${err.message}`);
       }
     } finally {
       this.isSyncing = false;
@@ -201,7 +201,7 @@ class GitHubSyncService {
     const settings = window.storage.getSettings();
     if (!settings.githubToken || !settings.githubRepo) {
       if (isUserInitiated) {
-        alert('[TUI ERROR] Please configure GitHub Token and Repo in Settings first.');
+        alert('ERROR: Please configure GitHub Token and Repo in Settings first.');
       }
       return;
     }
@@ -243,13 +243,13 @@ class GitHubSyncService {
       this.updateStatusBadge('SYNCED');
       if (window.audio) window.audio.playSuccess();
       if (isUserInitiated) {
-        alert(`[TUI OK] Successfully pulled from GitHub! (${importResult.countReminders} Reminders, ${importResult.countPasswords} Passwords)`);
+        alert(`OK: Successfully pulled from GitHub! (${importResult.countReminders} Reminders, ${importResult.countPasswords} Passwords)`);
       }
     } catch (err) {
       console.error('[GITHUB] Pull failed:', err);
       this.updateStatusBadge('PULL FAILED !');
       if (isUserInitiated) {
-        alert(`[TUI ERROR] GitHub Pull Failed: ${err.message}`);
+        alert(`ERROR: GitHub Pull Failed: ${err.message}`);
       }
     } finally {
       this.isSyncing = false;
@@ -272,7 +272,7 @@ class GitHubSyncService {
       }
     }
 
-    if (badge) badge.textContent = `[GH: ${text}]`;
+    if (badge) badge.textContent = `GH: ${text}`;
     if (settingsStatus) settingsStatus.textContent = `STATUS: ${text}`;
   }
 }
