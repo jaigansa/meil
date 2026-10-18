@@ -1,0 +1,760 @@
+/**
+ * style.css - Cyber Black & Yellow TUI Theme
+ * Mobile-First, Touch-Optimized, 100dvh Full Viewport, 3-Screen Snap Track
+ */
+
+:root {
+  --tui-bg: #000000;
+  --tui-surface: #0a0a04;
+  --tui-card-bg: #111105;
+  --tui-yellow: #ffd700;
+  --tui-yellow-bright: #ffe600;
+  --tui-yellow-dim: #7a6800;
+  --tui-yellow-dark: #262100;
+  --tui-danger: #ff3b00;
+  --tui-font: ui-monospace, 'SF Mono', 'Roboto Mono', 'Cascadia Code', 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--tui-bg);
+  color: var(--tui-yellow);
+  font-family: var(--tui-font);
+  font-size: 13px;
+  line-height: 1.4;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Persistent Top Header & Screen Indicator --- */
+.tui-header {
+  flex: 0 0 auto;
+  width: 100vw;
+  background: var(--tui-bg);
+  border-bottom: 2px solid var(--tui-yellow);
+  padding: max(6px, env(safe-area-inset-top)) 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.12);
+}
+
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.header-app-title {
+  color: var(--tui-yellow-bright);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.header-top-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-status-pill {
+  border: 1px solid var(--tui-yellow-dim);
+  padding: 2px 6px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.header-interactive-btn {
+  background: transparent;
+  color: var(--tui-yellow);
+  border: 1px dotted var(--tui-yellow);
+  font-family: var(--tui-font);
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.header-interactive-btn:active {
+  color: #000;
+  background: var(--tui-yellow);
+}
+
+.header-stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--tui-yellow-dim);
+  border-top: 1px dotted var(--tui-yellow-dark);
+  padding-top: 2px;
+}
+
+.header-swipe-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed var(--tui-yellow-dim);
+  padding-top: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.swipe-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex: 1;
+}
+
+.swipe-title-wrap span {
+  color: var(--tui-yellow-bright);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.swipe-dots {
+  display: flex;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--tui-yellow-dim);
+}
+
+.swipe-dots .dot.active {
+  color: var(--tui-yellow-bright);
+}
+
+.tui-arrow-btn {
+  background: #000;
+  color: var(--tui-yellow);
+  border: 1px solid var(--tui-yellow);
+  font-family: var(--tui-font);
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 10px;
+  cursor: pointer;
+  min-height: 32px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s, background-color 0.1s;
+}
+
+.tui-arrow-btn:active:not(:disabled) {
+  background: var(--tui-yellow);
+  color: #000;
+}
+
+.tui-arrow-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* --- Horizontal Swipe Track --- */
+.tui-track {
+  flex: 1 1 0;
+  width: 100vw;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.tui-track::-webkit-scrollbar {
+  display: none;
+}
+
+.tui-screen {
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-align: start;
+  padding: 10px 10px max(34px, env(safe-area-inset-bottom, 24px));
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+/* Custom Minimal Yellow Scrollbars */
+.tui-screen::-webkit-scrollbar {
+  width: 3px;
+}
+.tui-screen::-webkit-scrollbar-track {
+  background: var(--tui-bg);
+}
+.tui-screen::-webkit-scrollbar-thumb {
+  background: var(--tui-yellow-dim);
+}
+
+/* --- TUI Panels & Boxes --- */
+.tui-section-title {
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  color: var(--tui-yellow-bright);
+}
+
+.tui-panel {
+  border: 1px solid var(--tui-yellow);
+  background: var(--tui-card-bg);
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.tui-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed var(--tui-yellow-dim);
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.tui-box-empty {
+  font-family: var(--tui-font);
+  font-size: 11px;
+  color: var(--tui-yellow-dim);
+  text-align: center;
+  padding: 12px 6px;
+  line-height: 1.5;
+}
+
+.tui-card {
+  border: 1px solid var(--tui-yellow-dim);
+  background: var(--tui-surface);
+  padding: 10px;
+  margin-bottom: 8px;
+  position: relative;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.tui-card.item-overdue {
+  border: 1px solid var(--tui-danger);
+  background: rgba(255, 59, 0, 0.08);
+}
+
+.tui-card.item-completed {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.tui-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.card-time {
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+}
+
+.tui-card-title {
+  font-size: 13px;
+  font-weight: bold;
+  word-break: break-word;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.tui-card-details {
+  font-size: 11px;
+  color: #ccc;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tui-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  border-top: 1px dotted var(--tui-yellow-dim);
+  padding-top: 6px;
+}
+
+/* --- TUI Form Elements & Buttons (Touch & iOS Zoom Optimized) --- */
+.tui-form-group {
+  margin-bottom: 8px;
+}
+
+.tui-label {
+  display: block;
+  font-size: 11px;
+  color: var(--tui-yellow-dim);
+  margin-bottom: 3px;
+  font-weight: bold;
+}
+
+/* font-size: 16px prevents iOS Safari from automatically zooming in */
+.tui-input, .tui-select, .tui-textarea {
+  width: 100%;
+  background: #000;
+  border: 1px solid var(--tui-yellow);
+  color: var(--tui-yellow-bright);
+  font-family: var(--tui-font);
+  font-size: 16px;
+  padding: 8px 10px;
+  outline: none;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (min-width: 600px) {
+  .tui-input, .tui-select, .tui-textarea {
+    font-size: 13px;
+  }
+}
+
+.tui-input:focus, .tui-select:focus, .tui-textarea:focus {
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(255, 230, 0, 0.4);
+}
+
+.tui-input::placeholder, .tui-textarea::placeholder {
+  color: var(--tui-yellow-dim);
+  font-size: 13px;
+}
+
+.tui-btn {
+  background: #000;
+  color: var(--tui-yellow);
+  border: 1px solid var(--tui-yellow);
+  font-family: var(--tui-font);
+  font-size: 12px;
+  font-weight: bold;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px; /* Standard 44px mobile touch target */
+  transition: all 0.1s ease;
+  user-select: none;
+}
+
+.tui-btn:active, .tui-btn.btn-active {
+  background: var(--tui-yellow);
+  color: #000;
+}
+
+.tui-btn.btn-highlight {
+  background: var(--tui-yellow);
+  color: #000;
+}
+
+.tui-btn.btn-highlight:active {
+  background: #fff;
+  color: #000;
+}
+
+.tui-btn.btn-danger {
+  color: var(--tui-danger);
+  border-color: var(--tui-danger);
+}
+
+.tui-btn.btn-danger:active {
+  background: var(--tui-danger);
+  color: #fff;
+}
+
+.tui-btn-full {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.btn-icon {
+  min-width: 44px;
+  padding: 0 10px;
+}
+
+/* Multi-column Form Grids */
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Radio Group & Priority Pills */
+.tui-radio-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tui-radio-group label {
+  cursor: pointer;
+  border: 1px solid var(--tui-yellow-dim);
+  padding: 6px 4px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 38px;
+  text-align: center;
+  user-select: none;
+}
+
+.tui-radio-group input[type="radio"] {
+  accent-color: var(--tui-yellow);
+}
+
+.tui-radio-group label:has(input:checked) {
+  border-color: var(--tui-yellow);
+  background: var(--tui-yellow-dark);
+  color: var(--tui-yellow-bright);
+  font-weight: bold;
+}
+
+/* --- TUI Tags & Badges --- */
+.tui-tag {
+  font-size: 10px;
+  padding: 1px 4px;
+  border: 1px solid var(--tui-yellow-dim);
+}
+
+.tag-urgent {
+  color: var(--tui-danger);
+  border-color: var(--tui-danger);
+}
+
+.tag-high {
+  color: var(--tui-yellow-bright);
+}
+
+.tag-overdue-blink {
+  color: var(--tui-danger);
+  font-weight: bold;
+  animation: blink-danger 1s infinite;
+}
+
+@keyframes blink-danger {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.tag-done {
+  color: #55ff55;
+  border-color: #55ff55;
+}
+
+/* --- Screen 1: Calendar Specific Styling --- */
+.cal-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cal-nav-btn {
+  min-width: 44px;
+  min-height: 38px;
+  padding: 4px 10px;
+}
+
+.cal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+}
+
+.cal-month-header {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+  letter-spacing: 0.5px;
+}
+
+.cal-today-btn {
+  font-size: 10px;
+  min-height: 28px;
+  padding: 2px 6px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  min-height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  border: 1px solid var(--tui-yellow-dark);
+  background: var(--tui-bg);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cal-header {
+  min-height: 22px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--tui-yellow-dim);
+  border: none;
+  cursor: default;
+  background: transparent;
+}
+
+.cal-empty {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.cal-day:active {
+  background: var(--tui-yellow);
+  color: #000;
+}
+
+.cal-day.is-today {
+  border: 1px solid var(--tui-yellow-bright);
+  font-weight: bold;
+}
+
+.cal-day.is-selected {
+  background: var(--tui-yellow);
+  color: #000;
+  font-weight: bold;
+}
+
+/* Subtle indicator bar on dates with reminders */
+.cal-day.has-reminder::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 14px;
+  height: 2px;
+  background: var(--tui-yellow-bright);
+}
+
+.cal-day.is-selected.has-reminder::after {
+  background: #000;
+}
+
+/* --- Screen 2: Password Vault Specific Styling --- */
+.pass-search-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.pass-actions-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pass-card {
+  border-left: 3px solid var(--tui-yellow);
+}
+
+.pass-path {
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--tui-yellow-bright);
+  word-break: break-all;
+}
+
+.pass-row {
+  font-size: 12px;
+  margin: 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-all;
+}
+
+.pass-secret {
+  letter-spacing: 2px;
+  font-weight: bold;
+  color: #fff;
+  font-size: 14px;
+}
+
+.pass-unmasked {
+  letter-spacing: normal;
+  color: var(--tui-yellow-bright);
+  background: #1a1a00;
+  padding: 1px 4px;
+  word-break: break-all;
+}
+
+.pass-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
+  margin-top: 8px;
+  border-top: 1px dotted var(--tui-yellow-dim);
+  padding-top: 6px;
+}
+
+.tui-dim {
+  color: var(--tui-yellow-dim);
+}
+
+/* --- Screen 3: Settings Specific Styling --- */
+.settings-section {
+  border: 1px solid var(--tui-yellow);
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--tui-card-bg);
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--tui-yellow-bright);
+  border-bottom: 1px dotted var(--tui-yellow-dim);
+  padding-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.settings-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.settings-btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.toggle-switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 12px;
+  min-height: 38px;
+}
+
+.toggle-switch-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--tui-yellow);
+}
+
+/* --- TUI Alarm Trigger Modal Dialog --- */
+.tui-modal {
+  margin: auto;
+  background: #000;
+  border: 2px solid var(--tui-danger);
+  color: var(--tui-yellow);
+  font-family: var(--tui-font);
+  width: calc(100vw - 24px);
+  max-width: 380px;
+  padding: 0;
+  box-shadow: 0 0 30px rgba(255, 59, 0, 0.6);
+  outline: none;
+}
+
+.tui-modal::backdrop {
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(2px);
+}
+
+.tui-modal-header {
+  background: var(--tui-danger);
+  color: #fff;
+  font-weight: bold;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.tui-modal-body {
+  padding: 12px 10px;
+}
+
+.alarm-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.alarm-time-info {
+  font-size: 11px;
+  color: var(--tui-yellow-dim);
+  margin-bottom: 6px;
+}
+
+.alarm-details-info {
+  font-size: 11px;
+  color: #ddd;
+  margin-bottom: 10px;
+  background: #111;
+  padding: 6px;
+  border-left: 2px solid var(--tui-yellow);
+}
+
+.alarm-snooze-title {
+  font-size: 11px;
+  color: var(--tui-yellow-dim);
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.alarm-snooze-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
