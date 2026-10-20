@@ -153,7 +153,7 @@ class GitHubSyncService {
       const encodedContent = this.utf8ToBase64(contentStr);
 
       const body = {
-        message: `Sync Memory Core vault [${new Date().toISOString()}] [skip ci]`,
+        message: `Sync MEIL vault [${new Date().toISOString()}] [skip ci]`,
         content: encodedContent,
         branch: branch
       };

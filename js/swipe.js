@@ -10,9 +10,9 @@ class SwipeController {
     this.track = document.getElementById('swipe-track');
     this.screens = document.querySelectorAll('.tui-screen');
     this.screenTitles = [
-      '1/3 : CALENDAR',
-      '2/3 : PASSWORDS',
-      '3/3 : SETTINGS'
+      'CALENDAR',
+      'PASSWORDS',
+      'RSS FEEDS'
     ];
     this.currentIndex = 0;
     this.init();
@@ -130,21 +130,6 @@ class SwipeController {
     }
     if (rightArrow) {
       rightArrow.disabled = (index === this.screenTitles.length - 1);
-    }
-
-    // Update screen dot indicators
-    const dotsContainer = document.getElementById('swipe-dots');
-    if (dotsContainer) {
-      const dots = dotsContainer.querySelectorAll('.dot');
-      dots.forEach((dot, idx) => {
-        if (idx === index) {
-          dot.textContent = '#';
-          dot.classList.add('active');
-        } else {
-          dot.textContent = '-';
-          dot.classList.remove('active');
-        }
-      });
     }
   }
 }

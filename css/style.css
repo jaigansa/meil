@@ -14,14 +14,41 @@
 
 :root {
   --tui-bg: #000000;
-  --tui-surface: #0a0a04;
+  --tui-surface: #0a0800;
   --tui-card-bg: #000000;
-  --tui-yellow: #ffd700;
-  --tui-yellow-bright: #ffe600;
-  --tui-yellow-dim: #7a6800;
-  --tui-yellow-dark: #262100;
+  --tui-amber: #ffbf00;
+  --tui-yellow: #ffbf00;
+  --tui-yellow-bright: #ffd233;
+  --tui-yellow-dim: #8a6800;
+  --tui-yellow-dark: #291f00;
+  --tui-text: #ffbf00;
+  --tui-text-dim: #8a6800;
+  --tui-heading: #ffffff;
+  --tui-contrast: #000000;
+  --tui-border: #ffbf00;
+  --tui-border-dim: #543f00;
   --tui-danger: #ff3b00;
+  --tui-glow: rgba(255, 191, 0, 0.15);
   --tui-font: 'Samaano', ui-monospace, 'SF Mono', 'Roboto Mono', 'Cascadia Code', 'Courier New', monospace;
+}
+
+[data-theme="light"] {
+  --tui-bg: #f7f3e8;
+  --tui-surface: #ede5cf;
+  --tui-card-bg: #fdfbf7;
+  --tui-amber: #ffbf00;
+  --tui-yellow: #b87b00;
+  --tui-yellow-bright: #945d00;
+  --tui-yellow-dim: #704b00;
+  --tui-yellow-dark: #faeec7;
+  --tui-text: #171300;
+  --tui-text-dim: #634a00;
+  --tui-heading: #0a0800;
+  --tui-contrast: #000000;
+  --tui-border: #b87b00;
+  --tui-border-dim: #cca952;
+  --tui-danger: #d42200;
+  --tui-glow: rgba(184, 123, 0, 0.12);
 }
 
 * {
@@ -38,7 +65,7 @@ html, body {
   padding: 0;
   overflow: hidden;
   background-color: var(--tui-bg);
-  color: var(--tui-yellow);
+  color: var(--tui-text);
   font-family: var(--tui-font);
   font-size: 13px;
   line-height: 1.4;
@@ -62,7 +89,7 @@ body {
   flex-direction: column;
   gap: 4px;
   z-index: 100;
-  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.12);
+  box-shadow: 0 4px 14px var(--tui-glow);
 }
 
 .header-top-row {
@@ -86,7 +113,8 @@ body {
 }
 
 .header-status-pill {
-  border: 1px solid var(--tui-yellow-dim);
+  border: 1px solid var(--tui-border-dim);
+  color: var(--tui-text-dim);
   padding: 2px 6px;
   font-size: 10px;
   white-space: nowrap;
@@ -94,18 +122,34 @@ body {
 
 .header-interactive-btn {
   background: transparent;
-  color: var(--tui-yellow);
-  border: 1px dotted var(--tui-yellow);
+  color: var(--tui-text);
+  border: 1px dotted var(--tui-border);
   font-family: var(--tui-font);
   font-size: 10px;
   padding: 2px 6px;
   cursor: pointer;
   white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .header-interactive-btn:active {
   color: #000;
-  background: var(--tui-yellow);
+  background: var(--tui-amber);
+}
+
+.header-interactive-btn.btn-icon {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-interactive-btn.btn-icon .lucide {
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
 }
 
 .header-stats-row {
@@ -113,7 +157,7 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 11px;
-  color: var(--tui-yellow-dim);
+  color: var(--tui-text-dim);
   border-top: 1px dotted var(--tui-yellow-dark);
   padding-top: 2px;
 }
@@ -122,7 +166,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px dashed var(--tui-yellow-dim);
+  border-top: 1px dashed var(--tui-border-dim);
   padding-top: 4px;
   font-size: 12px;
   font-weight: bold;
@@ -130,33 +174,22 @@ body {
 
 .swipe-title-wrap {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1px;
+  justify-content: center;
   flex: 1;
 }
 
 .swipe-title-wrap span {
   color: var(--tui-yellow-bright);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: bold;
   letter-spacing: 0.5px;
 }
 
-.swipe-dots {
-  display: flex;
-  gap: 5px;
-  font-size: 10px;
-  color: var(--tui-yellow-dim);
-}
-
-.swipe-dots .dot.active {
-  color: var(--tui-yellow-bright);
-}
-
 .tui-arrow-btn {
-  background: #000;
-  color: var(--tui-yellow);
-  border: 1px solid var(--tui-yellow);
+  background: var(--tui-card-bg);
+  color: var(--tui-text);
+  border: 1px solid var(--tui-border);
   font-family: var(--tui-font);
   font-size: 12px;
   font-weight: bold;
@@ -171,7 +204,7 @@ body {
 }
 
 .tui-arrow-btn:active:not(:disabled) {
-  background: var(--tui-yellow);
+  background: var(--tui-amber);
   color: #000;
 }
 
@@ -292,7 +325,7 @@ body {
 }
 
 .tui-card {
-  border: 1px solid var(--tui-yellow-dim);
+  border: 1px solid var(--tui-border-dim);
   background: var(--tui-surface);
   padding: 10px;
   margin-bottom: 8px;
@@ -329,12 +362,12 @@ body {
   font-weight: bold;
   word-break: break-word;
   margin-bottom: 4px;
-  color: #fff;
+  color: var(--tui-heading);
 }
 
 .tui-card-details {
   font-size: 11px;
-  color: #ccc;
+  color: var(--tui-text-dim);
   margin-bottom: 8px;
   white-space: pre-wrap;
   word-break: break-word;
@@ -345,7 +378,7 @@ body {
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
-  border-top: 1px dotted var(--tui-yellow-dim);
+  border-top: 1px dotted var(--tui-border-dim);
   padding-top: 6px;
 }
 
@@ -357,7 +390,7 @@ body {
 .tui-label {
   display: block;
   font-size: 11px;
-  color: var(--tui-yellow-dim);
+  color: var(--tui-text-dim);
   margin-bottom: 3px;
   font-weight: bold;
 }
@@ -365,9 +398,9 @@ body {
 /* font-size: 16px prevents iOS Safari from automatically zooming in */
 .tui-input, .tui-select, .tui-textarea {
   width: 100%;
-  background: #000;
-  border: 1px solid var(--tui-yellow);
-  color: var(--tui-yellow-bright);
+  background: var(--tui-card-bg);
+  border: 1px solid var(--tui-border);
+  color: var(--tui-text);
   font-family: var(--tui-font);
   font-size: 16px;
   padding: 8px 10px;
@@ -384,19 +417,19 @@ body {
 }
 
 .tui-input:focus, .tui-select:focus, .tui-textarea:focus {
-  border-color: #fff;
-  box-shadow: 0 0 8px rgba(255, 230, 0, 0.4);
+  border-color: var(--tui-yellow-bright);
+  box-shadow: 0 0 8px var(--tui-glow);
 }
 
 .tui-input::placeholder, .tui-textarea::placeholder {
-  color: var(--tui-yellow-dim);
+  color: var(--tui-text-dim);
   font-size: 13px;
 }
 
 .tui-btn {
-  background: #000;
-  color: var(--tui-yellow);
-  border: 1px solid var(--tui-yellow);
+  background: var(--tui-card-bg);
+  color: var(--tui-text);
+  border: 1px solid var(--tui-border);
   font-family: var(--tui-font);
   font-size: 12px;
   font-weight: bold;
@@ -412,13 +445,14 @@ body {
 }
 
 .tui-btn:active, .tui-btn.btn-active {
-  background: var(--tui-yellow);
+  background: var(--tui-amber);
   color: #000;
 }
 
 .tui-btn.btn-highlight {
-  background: var(--tui-yellow);
+  background: var(--tui-amber);
   color: #000;
+  border-color: var(--tui-border);
 }
 
 .tui-btn.btn-highlight:active {
@@ -583,8 +617,9 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  border: 1px solid var(--tui-yellow-dark);
-  background: var(--tui-bg);
+  border: 1px solid var(--tui-border-dim);
+  background: var(--tui-card-bg);
+  color: var(--tui-text);
   position: relative;
   cursor: pointer;
   user-select: none;
@@ -594,7 +629,7 @@ body {
   min-height: 22px;
   font-size: 11px;
   font-weight: bold;
-  color: var(--tui-yellow-dim);
+  color: var(--tui-text-dim);
   border: none;
   cursor: default;
   background: transparent;
@@ -607,7 +642,7 @@ body {
 }
 
 .cal-day:active {
-  background: var(--tui-yellow);
+  background: var(--tui-amber);
   color: #000;
 }
 
@@ -617,7 +652,7 @@ body {
 }
 
 .cal-day.is-selected {
-  background: var(--tui-yellow);
+  background: var(--tui-amber);
   color: #000;
   font-weight: bold;
 }
@@ -673,14 +708,14 @@ body {
 .pass-secret {
   letter-spacing: 2px;
   font-weight: bold;
-  color: #fff;
+  color: var(--tui-heading);
   font-size: 14px;
 }
 
 .pass-unmasked {
   letter-spacing: normal;
   color: var(--tui-yellow-bright);
-  background: #1a1a00;
+  background: var(--tui-yellow-dark);
   padding: 1px 4px;
   word-break: break-all;
 }
@@ -690,21 +725,21 @@ body {
   grid-template-columns: 1fr 1fr auto;
   gap: 6px;
   margin-top: 8px;
-  border-top: 1px dotted var(--tui-yellow-dim);
+  border-top: 1px dotted var(--tui-border-dim);
   padding-top: 6px;
 }
 
 .tui-dim {
-  color: var(--tui-yellow-dim);
+  color: var(--tui-text-dim);
 }
 
-/* --- Screen 3: Settings Specific Styling --- */
+/* --- Settings Specific Styling --- */
 .settings-section {
   position: relative;
-  border: 1px solid var(--tui-yellow);
-  padding: 16px 10px 10px 10px;
-  margin-top: 14px;
-  margin-bottom: 14px;
+  border: 1px solid var(--tui-border);
+  padding: 16px 12px 12px 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
   background: var(--tui-card-bg);
 }
 
@@ -713,7 +748,7 @@ body {
   top: 0;
   transform: translateY(-50%);
   left: 10px;
-  background: var(--tui-bg);
+  background: var(--tui-card-bg);
   padding: 0 8px;
   font-size: 11px;
   font-weight: bold;
@@ -729,11 +764,76 @@ body {
   text-overflow: ellipsis;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+}
+
+.settings-section-desc {
+  font-size: 11px;
+  color: var(--tui-text-dim);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.settings-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  padding: 5px 0;
+  border-bottom: 1px dotted var(--tui-yellow-dark);
+}
+
+.settings-info-row:last-child {
+  border-bottom: none;
+}
+
+.settings-info-label {
+  color: var(--tui-text-dim);
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.settings-info-val {
+  color: var(--tui-text);
+  text-align: right;
+  word-break: normal;
+}
+
+.settings-theme-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.settings-theme-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.theme-palette-indicator {
+  width: 10px;
+  height: 10px;
+  background: var(--tui-amber);
+  border: 1px solid var(--tui-border);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .settings-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.settings-row-branch-path {
+  display: grid;
+  grid-template-columns: 90px 1fr;
   gap: 8px;
 }
 
@@ -744,39 +844,80 @@ body {
   margin-top: 6px;
 }
 
+.settings-btn-grid .tui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.settings-btn-grid .tui-btn .lucide,
+.settings-btn-grid .tui-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .toggle-switch-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 8px 0;
+  margin: 10px 0;
   font-size: 12px;
-  min-height: 38px;
+  min-height: 36px;
+}
+
+.toggle-switch-label {
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
 }
 
 .toggle-switch-row input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--tui-yellow);
+  accent-color: var(--tui-amber);
+  cursor: pointer;
 }
 
-/* --- TUI Alarm Trigger Modal Dialog --- */
-.tui-modal {
-  position: relative;
+/* --- TUI Modal Dialogs (Alarm, Settings, RSS Reader) --- */
+dialog.tui-modal {
+  position: fixed;
+  inset: 0;
   margin: auto;
-  background: #000;
+  background: var(--tui-bg);
   border: 2px solid var(--tui-danger);
-  color: var(--tui-yellow);
+  color: var(--tui-text);
   font-family: var(--tui-font);
   width: calc(100vw - 24px);
   max-width: 380px;
+  max-height: 90dvh;
   padding: 18px 12px 14px 12px;
   box-shadow: 0 0 30px rgba(255, 59, 0, 0.6);
   outline: none;
+  z-index: 99999;
+  box-sizing: border-box;
 }
 
-.tui-modal::backdrop {
-  background: rgba(0, 0, 0, 0.88);
+dialog.tui-modal:not([open]) {
+  display: none !important;
+}
+
+dialog.tui-modal[open] {
+  display: block;
+}
+
+dialog.tui-modal::backdrop {
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(2px);
+  z-index: 99998;
+}
+
+[data-theme="light"] dialog.tui-modal::backdrop {
+  background: rgba(30, 20, 0, 0.55);
 }
 
 .tui-modal-header {
@@ -784,7 +925,7 @@ body {
   top: 0;
   transform: translateY(-50%);
   left: 12px;
-  background: #000;
+  background: var(--tui-bg);
   color: var(--tui-danger);
   font-weight: bold;
   padding: 0 8px;
@@ -838,4 +979,441 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-bottom: 8px;
+}
+
+/* --- Screen 3: RSS Feed Viewer Specific Styling --- */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-anim {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.rss-search-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.rss-actions-bar {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.rss-filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 500px) {
+  .rss-filter-row {
+    flex-direction: row;
+    align-items: center;
+  }
+  .rss-filter-row select {
+    flex: 1;
+  }
+}
+
+.rss-tab-group {
+  display: flex;
+  gap: 4px;
+}
+
+.rss-tab-btn {
+  flex: 1;
+  background: var(--tui-card-bg);
+  color: var(--tui-text-dim);
+  border: 1px solid var(--tui-border-dim);
+  font-family: var(--tui-font);
+  font-size: 11px;
+  font-weight: bold;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-align: center;
+  min-height: 36px;
+  transition: all 0.1s ease;
+}
+
+.rss-tab-btn.active, .rss-tab-btn:active {
+  background: var(--tui-yellow-dark);
+  color: var(--tui-yellow-bright);
+  border-color: var(--tui-border);
+}
+
+.rss-status-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  padding: 4px 2px;
+  margin-bottom: 8px;
+  border-bottom: 1px dotted var(--tui-yellow-dark);
+}
+
+.rss-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.rss-preset-chip {
+  font-size: 10px;
+  padding: 4px 6px;
+  min-height: 32px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rss-preset-chip.preset-subscribed {
+  opacity: 0.4;
+  cursor: default;
+  border-style: dotted;
+}
+
+.subscribed-feeds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.feed-manage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 0;
+  border-left: 3px solid var(--tui-yellow);
+}
+
+.feed-info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feed-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.feed-name {
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--tui-yellow-bright);
+}
+
+.feed-url-line {
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-meta-line {
+  font-size: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feed-actions-col {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+/* RSS Article Cards */
+.rss-card {
+  border-left: 3px solid var(--tui-yellow-dim);
+  transition: all 0.15s ease;
+}
+
+.rss-card.item-unread {
+  border-left-color: var(--tui-yellow-bright);
+  background: #0d0c00;
+}
+
+.rss-card.item-read {
+  opacity: 0.75;
+}
+
+.rss-card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  font-size: 10px;
+}
+
+.rss-feed-badge {
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+  border-color: var(--tui-border-dim);
+  background: var(--tui-yellow-dark);
+}
+
+.rss-cat-badge {
+  color: var(--tui-text-dim);
+  border-color: var(--tui-border-dim);
+}
+
+.rss-time-ago {
+  font-size: 10px;
+}
+
+.rss-unread-dot {
+  font-size: 9px;
+  font-weight: bold;
+  background: var(--tui-amber);
+  color: #000;
+  padding: 0 4px;
+}
+
+.rss-headline {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--tui-heading);
+  cursor: pointer;
+  line-height: 1.35;
+  margin-bottom: 5px;
+  word-break: break-word;
+}
+
+.rss-card.item-unread .rss-headline {
+  color: var(--tui-yellow-bright);
+}
+
+.rss-headline:hover, .rss-headline:active {
+  text-decoration: underline;
+}
+
+.rss-snippet {
+  font-size: 11px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  word-break: break-word;
+  color: var(--tui-text-dim);
+}
+
+.rss-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-starred {
+  background: var(--tui-amber) !important;
+  color: #000 !important;
+}
+
+/* TUI RSS Article Reader Modal */
+dialog.rss-reader-modal {
+  width: calc(100vw - 16px);
+  max-width: 600px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  border-color: var(--tui-yellow);
+  box-shadow: 0 0 30px rgba(255, 191, 0, 0.3);
+}
+
+.rss-reader-modal .tui-modal-header {
+  color: var(--tui-yellow-bright);
+}
+
+.reader-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.reader-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+  line-height: 1.3;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.reader-author {
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.reader-actions-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.reader-divider {
+  font-size: 11px;
+  color: var(--tui-border-dim);
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 6px 0 10px 0;
+}
+
+.reader-content-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tui-text);
+  user-select: text;
+  max-height: 48vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.reader-content-body::-webkit-scrollbar {
+  width: 3px;
+}
+.reader-content-body::-webkit-scrollbar-thumb {
+  background: var(--tui-yellow-dim);
+}
+
+.reader-content-body p {
+  margin-bottom: 10px;
+}
+
+.reader-content-body a {
+  color: var(--tui-yellow-bright);
+  text-decoration: underline;
+}
+
+.reader-content-body blockquote {
+  border-left: 3px solid var(--tui-yellow);
+  padding-left: 10px;
+  margin: 8px 0;
+  color: var(--tui-text-dim);
+  background: var(--tui-glow);
+}
+
+.reader-content-body pre, .reader-content-body code {
+  font-family: var(--tui-font);
+  background: var(--tui-surface);
+  border: 1px solid var(--tui-border-dim);
+  color: var(--tui-yellow-bright);
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.reader-content-body pre {
+  padding: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.reader-content-body ul, .reader-content-body ol {
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+
+.reader-content-body img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--tui-border-dim);
+  margin: 8px 0;
+}
+
+.reader-nav-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  border-top: 1px dotted var(--tui-border-dim);
+  padding-top: 10px;
+}
+
+/* --- TUI Settings Modal --- */
+dialog.settings-modal {
+  width: calc(100vw - 20px);
+  max-width: 580px;
+  max-height: 86dvh;
+  height: 86dvh;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--tui-yellow);
+  background: var(--tui-bg);
+  color: var(--tui-text);
+  box-shadow: 0 0 35px var(--tui-glow);
+}
+
+dialog.settings-modal[open] {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.settings-modal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--tui-surface);
+  border-bottom: 2px solid var(--tui-yellow);
+  flex-shrink: 0;
+}
+
+.settings-modal-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 16px 14px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--tui-surface);
+  border-top: 1px dotted var(--tui-border-dim);
+  flex-shrink: 0;
+}
+
+.settings-footer-hint {
+  font-size: 10px;
+  color: var(--tui-text-dim);
+  letter-spacing: 0.3px;
+}
+
+.settings-modal-body::-webkit-scrollbar {
+  width: 4px;
+}
+.settings-modal-body::-webkit-scrollbar-thumb {
+  background: var(--tui-yellow-dim);
 }

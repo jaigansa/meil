@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MEMORY_CORE // TUI Vault & Reminders</title>
+  <title>MEIL // TUI Vault & Reminders</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,10 +15,12 @@
   <!-- Persistent Top Header & Screen Indicator -->
   <header class="tui-header">
     <div class="header-top-row">
-      <span class="header-app-title">MEMORY_CORE</span>
+      <span class="header-app-title">MEIL</span>
       <div class="header-top-right">
         <span class="header-status-pill" id="header-gh-status">GH: LOCAL</span>
+        <button class="header-interactive-btn btn-icon" id="header-theme-toggle" title="Toggle Light / Dark Mode"><i data-lucide="sun"></i></button>
         <button class="header-interactive-btn btn-icon" id="header-notif-status" title="Toggle Notifications"><i data-lucide="bell"></i></button>
+        <button class="header-interactive-btn btn-icon" id="header-settings-btn" title="Open Settings" onclick="if(window.app &amp;&amp; window.app.openSettingsModal){window.app.openSettingsModal();}else{const d=document.getElementById('settings-dialog');if(d){typeof d.showModal==='function'?d.showModal():d.setAttribute('open','');}}"><i data-lucide="settings"></i></button>
       </div>
     </div>
 
@@ -26,17 +28,13 @@
       <span id="header-clock">00:00:00</span>
       <span id="header-rem-count">REM: 0</span>
       <span id="header-pass-count">PASS: 0</span>
+      <span id="header-rss-count">RSS: 0</span>
     </div>
 
     <div class="header-swipe-indicator">
       <button class="tui-arrow-btn" id="swipe-arrow-left" aria-label="Previous Screen"><i data-lucide="chevron-left"></i></button>
       <div class="swipe-title-wrap">
-        <span id="swipe-screen-title">1/3 : CALENDAR</span>
-        <div class="swipe-dots" id="swipe-dots">
-          <span class="dot active">#</span>
-          <span class="dot">-</span>
-          <span class="dot">-</span>
-        </div>
+        <span id="swipe-screen-title">CALENDAR</span>
       </div>
       <button class="tui-arrow-btn" id="swipe-arrow-right" aria-label="Next Screen"><i data-lucide="chevron-right"></i></button>
     </div>
@@ -198,52 +196,194 @@
       </div>
 
       <div class="tui-box-empty">
-        &lt;&lt; Swipe Left for Settings | Swipe Right for Calendar &gt;&gt;
+        &lt;&lt; Swipe Left for RSS Feeds | Swipe Right for Calendar &gt;&gt;
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- SCREEN 3: SETTINGS & GITHUB / PASS SYNC    -->
+    <!-- SCREEN 3: RSS & ATOM FEED VIEWER           -->
     <!-- ========================================== -->
-    <section class="tui-screen" id="screen-settings">
+    <section class="tui-screen" id="screen-rss">
+      <div class="tui-section-title">
+        <span>RSS &amp; ATOM FEED VIEWER</span>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="rss-search-bar">
+        <input type="text" class="tui-input" id="rss-search-input" placeholder=">_ FILTER HEADLINES..." autocomplete="off">
+        <button class="tui-btn btn-icon" id="rss-search-clear" title="Clear Search"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="rss-actions-bar">
+        <button class="tui-btn btn-highlight" id="btn-refresh-rss" title="Refresh All Feeds">
+          <i data-lucide="refresh-cw"></i> REFRESH
+        </button>
+        <button class="tui-btn" id="btn-toggle-add-feed">
+          + FEED
+        </button>
+        <button class="tui-btn" id="btn-mark-all-read" title="Mark All as Read">
+          <i data-lucide="check"></i> READ ALL
+        </button>
+        <button class="tui-btn btn-icon" id="btn-toggle-manage-feeds" title="Manage Subscribed Feeds &amp; OPML">
+          <i data-lucide="filter"></i>
+        </button>
+      </div>
+
+      <!-- Filter Controls: Feed Dropdown & Tabs -->
+      <div class="rss-filter-row">
+        <select class="tui-select" id="rss-feed-filter">
+          <option value="ALL">ALL FEEDS</option>
+        </select>
+        <div class="rss-tab-group">
+          <button class="rss-tab-btn active" data-tab="all">ALL</button>
+          <button class="rss-tab-btn" data-tab="unread">UNREAD</button>
+          <button class="rss-tab-btn" data-tab="starred">STARRED</button>
+        </div>
+      </div>
+
+      <!-- Live Fetch Status Line -->
+      <div class="rss-status-line">
+        <span id="rss-status-text" class="tui-dim">&gt;_ SYSTEM READY</span>
+        <span id="rss-article-stats" class="tui-dim">0 UNREAD</span>
+      </div>
+
+      <!-- Collapsible Add Feed Panel -->
+      <div class="tui-panel" id="add-feed-container" style="display: none;">
+        <div class="tui-panel-header">
+          <span>&gt;_ SUBSCRIBE NEW RSS/ATOM FEED</span>
+        </div>
+
+        <form id="add-feed-form">
+          <div class="tui-form-group">
+            <label class="tui-label">FEED URL (RSS, ATOM, XML):</label>
+            <input type="url" class="tui-input" id="feed-input-url" placeholder="https://news.ycombinator.com/rss" required autocomplete="off">
+          </div>
+
+          <div class="form-row-2col">
+            <div class="tui-form-group">
+              <label class="tui-label">TITLE / ALIAS (OPTIONAL):</label>
+              <input type="text" class="tui-input" id="feed-input-title" placeholder="e.g. HN Tech" autocomplete="off">
+            </div>
+            <div class="tui-form-group">
+              <label class="tui-label">CATEGORY:</label>
+              <select class="tui-select" id="feed-input-category">
+                <option value="TECH">TECH</option>
+                <option value="CODE">CODE</option>
+                <option value="NEWS">NEWS</option>
+                <option value="DEV">DEV</option>
+                <option value="SCIENCE">SCIENCE</option>
+                <option value="GENERAL">GENERAL</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="tui-btn btn-highlight tui-btn-full" id="btn-submit-feed">
+            SUBSCRIBE FEED
+          </button>
+        </form>
+
+        <div class="tui-label" style="margin-top: 10px;">QUICK ADD POPULAR PRESETS:</div>
+        <div class="rss-presets-grid" id="rss-presets-grid">
+          <!-- Populated dynamically by rss.js -->
+        </div>
+      </div>
+
+      <!-- Collapsible Manage Feeds & OPML Panel -->
+      <div class="tui-panel" id="manage-feeds-container" style="display: none;">
+        <div class="tui-panel-header">
+          <span>&gt;_ MANAGE FEEDS &amp; OPML</span>
+        </div>
+
+        <div class="settings-btn-grid" style="margin-bottom: 10px; margin-top: 0;">
+          <button class="tui-btn" id="btn-export-opml">
+            v EXPORT OPML
+          </button>
+          <button class="tui-btn" id="btn-import-opml">
+            ^ IMPORT OPML
+          </button>
+          <input type="file" id="file-import-opml" accept=".opml,.xml" style="display: none;">
+        </div>
+
+        <div class="tui-label" style="margin-bottom: 6px;">SUBSCRIBED FEEDS:</div>
+        <div class="subscribed-feeds-list" id="subscribed-feeds-list">
+          <!-- Populated dynamically by rss.js -->
+        </div>
+      </div>
+
+      <!-- Articles Stream -->
+      <div id="rss-articles-list">
+        <!-- Rendered dynamically by rss.js -->
+      </div>
+
+      <div class="tui-box-empty">
+        &lt;&lt; Swipe Right for Passwords &amp; Calendar &gt;&gt;
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive TUI Settings Modal Dialog -->
+  <dialog class="tui-modal settings-modal" id="settings-dialog">
+    <div class="settings-modal-topbar">
+      <span class="settings-modal-title">&gt;_ SETTINGS &amp; SYSTEM CONFIG</span>
+      <button class="tui-btn btn-icon btn-danger" id="btn-close-settings" title="Close Settings" onclick="if(window.app &amp;&amp; window.app.closeSettingsModal){window.app.closeSettingsModal();}else{const d=document.getElementById('settings-dialog');if(d){typeof d.close==='function'?d.close():d.removeAttribute('open');}}">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="tui-modal-body settings-modal-body">
       <!-- Storage Info -->
       <div class="settings-section">
         <div class="settings-section-title">SYSTEM STATUS</div>
-        <div class="pass-row"><span class="tui-dim">ENGINE:</span> <span>localStorage (Client-Side)</span></div>
-        <div class="pass-row"><span class="tui-dim">VAULT:</span> <span id="settings-vault-stats">Loading...</span></div>
-        <div class="pass-row"><span class="tui-dim">SYNC:</span> <span id="settings-gh-status">STATUS: LOCAL ONLY</span></div>
+        <div class="settings-info-row"><span class="settings-info-label">ENGINE:</span> <span class="settings-info-val">localStorage (Client-Side)</span></div>
+        <div class="settings-info-row"><span class="settings-info-label">VAULT:</span> <span class="settings-info-val" id="settings-vault-stats">Loading...</span></div>
+        <div class="settings-info-row"><span class="settings-info-label">SYNC:</span> <span class="settings-info-val" id="settings-gh-status">STATUS: LOCAL ONLY</span></div>
+      </div>
+
+      <!-- Appearance & Theme -->
+      <div class="settings-section">
+        <div class="settings-section-title">APPEARANCE &amp; THEME</div>
+        <div class="settings-theme-row">
+          <div class="settings-theme-info">
+            <span class="theme-palette-indicator"></span>
+            <span>Palette: Amber Gold (#FFBF00)</span>
+          </div>
+          <button class="tui-btn btn-highlight" id="btn-theme-toggle-settings">
+            THEME: DARK
+          </button>
+        </div>
       </div>
 
       <!-- GitHub Repo Sync -->
       <div class="settings-section">
         <div class="settings-section-title">GITHUB REPOSITORY SYNC</div>
-        <p class="tui-dim" style="font-size: 11px; margin-bottom: 8px;">
+        <p class="settings-section-desc">
           Direct REST API sync with your GitHub repo (stores encrypted/plain vault JSON).
         </p>
 
         <div class="tui-form-group">
           <label class="tui-label">PERSONAL ACCESS TOKEN (PAT with repo scope):</label>
-          <input type="password" class="tui-input" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          <input type="password" class="tui-input" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
         </div>
 
         <div class="tui-form-group">
           <label class="tui-label">REPOSITORY (owner/repo):</label>
-          <input type="text" class="tui-input" id="gh-repo-input" placeholder="jaigansa/pass-store">
+          <input type="text" class="tui-input" id="gh-repo-input" placeholder="jaigansa/pass-store" autocomplete="off" spellcheck="false">
         </div>
 
-        <div class="settings-row-2col">
+        <div class="settings-row-branch-path">
           <div class="tui-form-group">
             <label class="tui-label">BRANCH:</label>
-            <input type="text" class="tui-input" id="gh-branch-input" value="main">
+            <input type="text" class="tui-input" id="gh-branch-input" value="main" autocomplete="off" spellcheck="false">
           </div>
-          <div class="tui-form-group" style="flex: 1;">
+          <div class="tui-form-group">
             <label class="tui-label">FILE PATH:</label>
-            <input type="text" class="tui-input" id="gh-path-input" value="memory_vault.json">
+            <input type="text" class="tui-input" id="gh-path-input" value="memory_vault.json" autocomplete="off" spellcheck="false">
           </div>
         </div>
 
         <div class="toggle-switch-row">
-          <span>Auto-sync on every save</span>
+          <label for="gh-autosync-toggle" class="toggle-switch-label">Auto-sync on every save</label>
           <input type="checkbox" id="gh-autosync-toggle">
         </div>
 
@@ -264,8 +404,8 @@
       <!-- Unix Pass CLI Integration -->
       <div class="settings-section">
         <div class="settings-section-title">UNIX PASS CLI BRIDGE</div>
-        <p class="tui-dim" style="font-size: 11px; margin-bottom: 8px;">
-          Export all credentials & memories into an automated script for ~/.password-store.
+        <p class="settings-section-desc">
+          Export all credentials &amp; memories into an automated script for ~/.password-store.
         </p>
         <button class="tui-btn tui-btn-full" id="btn-export-pass-script">
           v EXPORT PASS CLI SCRIPT (pass_import.sh)
@@ -277,30 +417,30 @@
 
       <!-- Audio & Notifications -->
       <div class="settings-section">
-        <div class="settings-section-title">AUDIO & ALERTS</div>
+        <div class="settings-section-title">AUDIO &amp; ALERTS</div>
         <div class="toggle-switch-row">
-          <span>8-Bit Synthesizer Chimes</span>
+          <label for="settings-sound-toggle" class="toggle-switch-label">8-Bit Synthesizer Chimes</label>
           <input type="checkbox" id="settings-sound-toggle" checked>
         </div>
         <div class="settings-btn-grid">
-          <button class="tui-btn btn-icon" id="btn-test-sound" title="Test Audio Chime">
-            <i data-lucide="volume-2"></i>
+          <button class="tui-btn" id="btn-test-sound" title="Test Audio Chime">
+            <i data-lucide="volume-2"></i> TEST CHIME
           </button>
-          <button class="tui-btn btn-icon" id="btn-test-notif" title="Test Notification">
-            <i data-lucide="bell-ring"></i>
+          <button class="tui-btn" id="btn-test-notif" title="Test Notification">
+            <i data-lucide="bell-ring"></i> TEST ALERT
           </button>
         </div>
       </div>
 
       <!-- Backup & Maintenance -->
       <div class="settings-section">
-        <div class="settings-section-title">BACKUP & MAINTENANCE</div>
+        <div class="settings-section-title">BACKUP &amp; MAINTENANCE</div>
         <div class="settings-btn-grid" style="margin-bottom: 8px; margin-top: 0;">
           <button class="tui-btn" id="btn-export-json">
-            v EXPORT JSON
+            <i data-lucide="download"></i> EXPORT JSON
           </button>
           <button class="tui-btn" id="btn-import-json">
-            ^ IMPORT JSON
+            <i data-lucide="upload"></i> IMPORT JSON
           </button>
           <input type="file" id="file-import-input" accept=".json" style="display: none;">
         </div>
@@ -309,16 +449,17 @@
           ! PURGE COMPLETED REMINDERS
         </button>
         <button class="tui-btn btn-danger tui-btn-full" id="btn-reset-all">
-          !!! FACTORY RESET MEMORY CORE
+          !!! FACTORY RESET MEIL
         </button>
       </div>
-
-      <div class="tui-box-empty">
-        &lt;&lt; Swipe Right to Return to Passwords & Calendar
-      </div>
-    </section>
-
-  </main>
+    </div>
+    <div class="settings-modal-footer">
+      <span class="settings-footer-hint tui-dim">&gt;_ PRESS ESC TO EXIT</span>
+      <button class="tui-btn" id="btn-close-settings-footer" onclick="if(window.app &amp;&amp; window.app.closeSettingsModal){window.app.closeSettingsModal();}else{const d=document.getElementById('settings-dialog');if(d){typeof d.close==='function'?d.close():d.removeAttribute('open');}}">
+        CLOSE [ESC]
+      </button>
+    </div>
+  </dialog>
 
   <!-- Interactive TUI Alarm Modal Dialog -->
   <dialog class="tui-modal" id="alarm-dialog">
@@ -348,6 +489,50 @@
     </div>
   </dialog>
 
+  <!-- Interactive TUI Article Reader Modal Dialog -->
+  <dialog class="tui-modal rss-reader-modal" id="rss-reader-dialog">
+    <div class="tui-modal-header">
+      <span id="reader-feed-title">READER // ARTICLE</span>
+    </div>
+    <div class="tui-modal-body">
+      <div class="reader-meta-row">
+        <span class="tui-dim" id="reader-pub-date"></span>
+        <span class="tui-tag" id="reader-category">GENERAL</span>
+      </div>
+      <div class="reader-title" id="reader-item-title">Article Title</div>
+      <div class="reader-author tui-dim" id="reader-item-author" style="display: none;"></div>
+
+      <div class="reader-actions-bar">
+        <a href="#" target="_blank" rel="noopener noreferrer" class="tui-btn btn-highlight" id="reader-btn-open">
+          ^ OPEN LINK
+        </a>
+        <button class="tui-btn btn-icon" id="reader-btn-star" title="Star Article">
+          <i data-lucide="star"></i>
+        </button>
+        <button class="tui-btn btn-icon" id="reader-btn-read" title="Toggle Read Status">
+          <i data-lucide="check"></i>
+        </button>
+        <button class="tui-btn btn-icon" id="reader-btn-copy" title="Copy Article URL">
+          <i data-lucide="copy"></i>
+        </button>
+        <button class="tui-btn btn-danger btn-icon" id="reader-btn-close" title="Close Reader">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="reader-divider">──────────────────────────────────────────────</div>
+
+      <div class="reader-content-body" id="reader-content-body">
+        <!-- Sanitized article content -->
+      </div>
+
+      <div class="reader-nav-footer">
+        <button class="tui-btn" id="reader-btn-prev">&lt; PREV ARTICLE</button>
+        <button class="tui-btn" id="reader-btn-next">NEXT ARTICLE &gt;</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Scripts in dependency order -->
   <script src="js/lucide.min.js"></script>
   <script src="js/storage.js"></script>
@@ -355,6 +540,7 @@
   <script src="js/notifier.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/passwords.js"></script>
+  <script src="js/rss.js"></script>
   <script src="js/github_sync.js"></script>
   <script src="js/pass_bridge.js"></script>
   <script src="js/swipe.js"></script>

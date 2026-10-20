@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # tools/pass_bridge.sh - Companion CLI Sync Utility
-# Bridges unix 'pass' CLI (~/.password-store) with Memory Core JSON Vault.
+# Bridges unix 'pass' CLI (~/.password-store) with MEIL JSON Vault.
 # ==============================================================================
 set -euo pipefail
 
@@ -29,7 +29,7 @@ check_dependencies() {
 
 cmd_status() {
     echo "=================================================="
-    echo " MEMORY CORE :: PASS CLI BRIDGE STATUS"
+    echo " MEIL :: PASS CLI BRIDGE STATUS"
     echo "=================================================="
     echo "Password Store Dir : ${PASSWORD_STORE_DIR:-$HOME/.password-store}"
     if [ -d "${PASSWORD_STORE_DIR:-$HOME/.password-store}" ]; then

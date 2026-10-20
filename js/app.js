@@ -10,15 +10,68 @@ class AppCoordinator {
   }
 
   init() {
+    this.setupTheme();
     this.startClock();
     this.updateHeaderMetrics();
     this.setupGlobalControls();
+    this.setupSettingsModal();
     this.setupSettingsActions();
     if (window.lucide) window.lucide.createIcons();
 
     window.addEventListener('vault-updated', () => {
       this.updateHeaderMetrics();
     });
+  }
+
+  setupTheme() {
+    const savedTheme = (window.storage && window.storage.getSettings().theme) || 'dark';
+    this.applyTheme(savedTheme);
+
+    const btnHeaderToggle = document.getElementById('header-theme-toggle');
+    if (btnHeaderToggle) {
+      btnHeaderToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        this.applyTheme(next);
+        if (window.storage) window.storage.updateSettings({ theme: next });
+        if (window.audio) window.audio.playClick();
+      });
+    }
+
+    const btnSettingsToggle = document.getElementById('btn-theme-toggle-settings');
+    if (btnSettingsToggle) {
+      btnSettingsToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        this.applyTheme(next);
+        if (window.storage) window.storage.updateSettings({ theme: next });
+        if (window.audio) window.audio.playClick();
+      });
+    }
+  }
+
+  applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // Update meta theme-color
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'dark' ? '#000000' : '#f9f6ed');
+    }
+
+    // Update header toggle button icon
+    const btnHeaderToggle = document.getElementById('header-theme-toggle');
+    if (btnHeaderToggle) {
+      btnHeaderToggle.innerHTML = `<i data-lucide="${theme === 'dark' ? 'sun' : 'moon'}"></i>`;
+      btnHeaderToggle.title = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+      if (window.lucide) window.lucide.createIcons({ root: btnHeaderToggle });
+    }
+
+    // Update settings toggle button text
+    const btnSettingsToggle = document.getElementById('btn-theme-toggle-settings');
+    if (btnSettingsToggle) {
+      btnSettingsToggle.textContent = theme === 'dark' ? 'THEME: DARK' : 'THEME: LIGHT';
+    }
   }
 
   startClock() {
@@ -40,12 +93,14 @@ class AppCoordinator {
 
     const reminders = window.storage.getReminders();
     const passwords = window.storage.getPasswords();
+    const feeds = window.storage.getFeeds ? window.storage.getFeeds() : [];
 
     const activeReminders = reminders.filter(r => !r.isCompleted);
     const overdueReminders = activeReminders.filter(r => (r.snoozedUntil || r.dueAt) < Date.now());
 
     const remCountEl = document.getElementById('header-rem-count');
     const passCountEl = document.getElementById('header-pass-count');
+    const rssCountEl = document.getElementById('header-rss-count');
     const notifStatusEl = document.getElementById('header-notif-status');
 
     if (remCountEl) {
@@ -60,6 +115,10 @@ class AppCoordinator {
       passCountEl.textContent = `PASS: ${passwords.length}`;
     }
 
+    if (rssCountEl) {
+      rssCountEl.textContent = `RSS: ${feeds.length}`;
+    }
+
     if (notifStatusEl) {
       const isGranted = window.notifier && window.notifier.hasNotificationPermission();
       notifStatusEl.innerHTML = `<i data-lucide="${isGranted ? 'bell' : 'bell-off'}"></i>`;
@@ -68,10 +127,118 @@ class AppCoordinator {
       if (window.lucide) window.lucide.createIcons({ root: notifStatusEl });
     }
 
-    // Update settings screen summary stats
+    // Update settings modal summary stats if visible
     const statsSummary = document.getElementById('settings-vault-stats');
     if (statsSummary) {
-      statsSummary.textContent = `${activeReminders.length} Active Reminders | ${passwords.length} Passwords Stored`;
+      statsSummary.textContent = `${activeReminders.length} REMINDERS | ${passwords.length} PASSWORDS | ${feeds.length} FEEDS`;
+    }
+  }
+
+  openSettingsModal() {
+    const settingsDialog = document.getElementById('settings-dialog');
+    if (!settingsDialog) return;
+
+    this.updateSettingsMetrics();
+    if (window.lucide) {
+      window.lucide.createIcons({ root: settingsDialog });
+    }
+
+    if (typeof settingsDialog.showModal === 'function') {
+      try {
+        if (!settingsDialog.open) {
+          settingsDialog.showModal();
+        }
+      } catch (e) {
+        settingsDialog.setAttribute('open', '');
+      }
+    } else {
+      settingsDialog.setAttribute('open', '');
+    }
+
+    if (window.audio) window.audio.playClick();
+  }
+
+  closeSettingsModal() {
+    const settingsDialog = document.getElementById('settings-dialog');
+    if (!settingsDialog) return;
+
+    if (typeof settingsDialog.close === 'function') {
+      try {
+        if (settingsDialog.open) {
+          settingsDialog.close();
+        }
+      } catch (e) {
+        settingsDialog.removeAttribute('open');
+      }
+    } else {
+      settingsDialog.removeAttribute('open');
+    }
+
+    if (window.audio) window.audio.playClick();
+  }
+
+  updateSettingsMetrics() {
+    const vaultStats = document.getElementById('settings-vault-stats');
+    if (vaultStats && window.storage) {
+      try {
+        const vault = window.storage.getVault();
+        const remCount = vault.reminders ? vault.reminders.length : 0;
+        const passCount = vault.passwords ? vault.passwords.length : 0;
+        const feedCount = vault.feeds ? vault.feeds.length : 0;
+        vaultStats.textContent = `${remCount} REMINDERS | ${passCount} PASSWORDS | ${feedCount} FEEDS`;
+      } catch (e) {
+        vaultStats.textContent = 'READY (localStorage)';
+      }
+    }
+
+    if (window.githubSync && typeof window.githubSync.populateSettingsForm === 'function') {
+      window.githubSync.populateSettingsForm();
+    }
+  }
+
+  setupSettingsModal() {
+    const btnSettings = document.getElementById('header-settings-btn');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+    const btnCloseSettingsFooter = document.getElementById('btn-close-settings-footer');
+    const settingsDialog = document.getElementById('settings-dialog');
+
+    if (btnSettings) {
+      btnSettings.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.openSettingsModal();
+      });
+    }
+
+    const closeHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeSettingsModal();
+    };
+
+    if (btnCloseSettings) {
+      btnCloseSettings.addEventListener('click', closeHandler);
+    }
+
+    if (btnCloseSettingsFooter) {
+      btnCloseSettingsFooter.addEventListener('click', closeHandler);
+    }
+
+    if (settingsDialog) {
+      settingsDialog.addEventListener('click', (e) => {
+        if (e.target === settingsDialog) {
+          const rect = settingsDialog.getBoundingClientRect();
+          const isInside = (
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom
+          );
+          if (!isInside) {
+            this.closeSettingsModal();
+          }
+        }
+      });
     }
   }
 
@@ -95,6 +262,14 @@ class AppCoordinator {
         if (dialog && (dialog.open || dialog.hasAttribute('open'))) {
           if (window.notifier) window.notifier.closeAlarmModal();
         }
+        const rssDialog = document.getElementById('rss-reader-dialog');
+        if (rssDialog && (rssDialog.open || rssDialog.hasAttribute('open'))) {
+          if (window.rssViewer) window.rssViewer.closeReaderModal();
+        }
+        const settingsDialog = document.getElementById('settings-dialog');
+        if (settingsDialog && (settingsDialog.open || settingsDialog.hasAttribute('open'))) {
+          this.closeSettingsModal();
+        }
       }
     });
   }
@@ -115,7 +290,7 @@ class AppCoordinator {
         if (window.notifier) {
           const granted = await window.notifier.requestPermission();
           if (granted) {
-            new Notification('! TEST ALARM: MEMORY CORE', {
+            new Notification('! TEST ALARM: MEIL', {
               body: 'System notifications and sound are operational!',
               icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">!</text></svg>'
             });
@@ -136,7 +311,7 @@ class AppCoordinator {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `memory_core_vault_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `meil_vault_${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -162,7 +337,7 @@ class AppCoordinator {
         reader.onload = (event) => {
           const result = window.storage.importJSON(event.target.result);
           if (result.success) {
-            alert(`OK: Backup successfully imported!\nReminders: ${result.countReminders}\nPasswords: ${result.countPasswords}`);
+            alert(`OK: Backup successfully imported!\nReminders: ${result.countReminders}\nPasswords: ${result.countPasswords}\nFeeds: ${result.countFeeds || 0}`);
             if (window.audio) window.audio.playSuccess();
           } else {
             alert(`ERROR: Failed to import: ${result.error}`);
@@ -203,7 +378,7 @@ class AppCoordinator {
         const phrase = prompt('DANGER ZONE: Type "DELETE" to wipe all data and reset to defaults:');
         if (phrase === 'DELETE') {
           window.storage.resetAll();
-          alert('OK: Memory Core reset completed.');
+          alert('OK: MEIL reset completed.');
           location.reload();
         }
       });
@@ -211,7 +386,11 @@ class AppCoordinator {
   }
 }
 
-// Bootstrap once DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+// Bootstrap once DOM is ready (or immediately if already parsed)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.app = new AppCoordinator();
+  });
+} else {
   window.app = new AppCoordinator();
-});
+}

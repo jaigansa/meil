@@ -79,7 +79,7 @@ class NotifierService {
     if (this.hasNotificationPermission()) {
       try {
         new Notification(`! REMINDER DUE: ${item.title}`, {
-          body: `${item.details || 'Scheduled for ' + item.time}\nSwipe into Memory Core to manage.`,
+          body: `${item.details || 'Scheduled for ' + item.time}\nSwipe into MEIL to manage.`,
           icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">!</text></svg>',
           tag: item.id
         });
