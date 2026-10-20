@@ -551,18 +551,52 @@ ${outlines}
     return JSON.stringify(this.getVault(), null, 2);
   }
 
+  exportSyncJSON() {
+    const vault = this.getVault();
+    const cleanSettings = { ...vault.settings };
+    // Never commit secret tokens to remote repositories to avoid push protection blocks & security leaks
+    delete cleanSettings.githubToken;
+    const syncVault = {
+      reminders: vault.reminders || [],
+      passwords: vault.passwords || [],
+      feeds: vault.feeds || [],
+      rssArticles: vault.rssArticles || [],
+      settings: cleanSettings
+    };
+    return JSON.stringify(syncVault, null, 2);
+  }
+
   importJSON(jsonString) {
     try {
       const parsed = JSON.parse(jsonString);
       if (!parsed || (typeof parsed !== 'object')) {
         throw new Error('Invalid JSON format');
       }
+      const currentVault = this.getVault();
+      const currentSettings = currentVault.settings || {};
+
+      // Preserve active local credentials if the incoming JSON doesn't provide them
+      const incomingSettings = parsed.settings || {};
+      const mergedSettings = Object.assign(this.getDefaultSettings(), currentSettings, incomingSettings);
+      if (!incomingSettings.githubToken && currentSettings.githubToken) {
+        mergedSettings.githubToken = currentSettings.githubToken;
+      }
+      if (!incomingSettings.githubRepo && currentSettings.githubRepo) {
+        mergedSettings.githubRepo = currentSettings.githubRepo;
+      }
+      if (!incomingSettings.githubBranch && currentSettings.githubBranch) {
+        mergedSettings.githubBranch = currentSettings.githubBranch;
+      }
+      if (!incomingSettings.githubPath && currentSettings.githubPath) {
+        mergedSettings.githubPath = currentSettings.githubPath;
+      }
+
       const vault = {
         reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
         passwords: Array.isArray(parsed.passwords) ? parsed.passwords : [],
         feeds: Array.isArray(parsed.feeds) ? parsed.feeds : this.getDefaultFeeds(),
         rssArticles: Array.isArray(parsed.rssArticles) ? parsed.rssArticles : [],
-        settings: Object.assign(this.getDefaultSettings(), parsed.settings || {})
+        settings: mergedSettings
       };
       this.saveVault(vault);
       return {

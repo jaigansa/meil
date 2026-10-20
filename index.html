@@ -387,18 +387,25 @@
           <input type="checkbox" id="gh-autosync-toggle">
         </div>
 
-        <button class="tui-btn btn-highlight tui-btn-full" id="btn-save-gh-settings">
-          SAVE GITHUB CONFIG
-        </button>
+        <div class="settings-btn-grid" style="margin-top: 10px; margin-bottom: 6px;">
+          <button class="tui-btn btn-highlight" id="btn-save-gh-settings">
+            SAVE CONFIG
+          </button>
+          <button class="tui-btn" id="btn-gh-test" title="Verify GitHub credentials &amp; repo access">
+            <i data-lucide="activity"></i> TEST REPO
+          </button>
+        </div>
 
         <div class="settings-btn-grid">
           <button class="tui-btn" id="btn-gh-push">
-            ^ PUSH TO GH
+            <i data-lucide="upload"></i> PUSH TO GH
           </button>
           <button class="tui-btn" id="btn-gh-pull">
-            v PULL FROM GH
+            <i data-lucide="download"></i> PULL FROM GH
           </button>
         </div>
+
+        <div id="gh-sync-details" class="tui-dim" style="font-size: 11px; margin-top: 8px; word-break: break-all;"></div>
       </div>
 
       <!-- Unix Pass CLI Integration -->
