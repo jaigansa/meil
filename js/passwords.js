@@ -1,7 +1,12 @@
 /**
- * passwords.js - Password Vault Manager (pass CLI Compatible)
- * Features: Masked view, one-tap clipboard copy, 8-bit password generator,
- * instant search filter, and credential CRUD.
+ * passwords.js - Password Vault Manager (Local Browser Storage)
+ *
+ * Security Architecture:
+ * - Credentials are stored strictly on-device in local browser storage.
+ * - All remote GitHub pass repository syncing and cloud transmission
+ *   have been completely purged to eliminate credential exposure risks.
+ * - Masked view, 1-tap clipboard copy, inline show/hide reveal,
+ *   cryptographically secure password generator, and instant search filter.
  */
 
 class PasswordVault {
@@ -13,6 +18,7 @@ class PasswordVault {
 
   init() {
     this.setupEventListeners();
+    this.setupNewPassModalListeners();
     this.render();
     window.addEventListener('vault-updated', () => {
       this.render();
@@ -20,15 +26,16 @@ class PasswordVault {
   }
 
   setupEventListeners() {
-    // Search input
     const searchInput = document.getElementById('pass-search-input');
     const searchClear = document.getElementById('pass-search-clear');
+
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.searchQuery = e.target.value.toLowerCase().trim();
         this.renderList();
       });
     }
+
     if (searchClear) {
       searchClear.addEventListener('click', () => {
         if (searchInput) searchInput.value = '';
@@ -37,111 +44,163 @@ class PasswordVault {
         if (window.audio) window.audio.playClick();
       });
     }
+  }
 
-    // Toggle Add New Credential accordion / modal
-    const btnToggleAdd = document.getElementById('btn-toggle-add-pass');
-    const formContainer = document.getElementById('add-pass-container');
-    if (btnToggleAdd && formContainer) {
-      btnToggleAdd.addEventListener('click', () => {
-        const isHidden = formContainer.style.display === 'none';
-        formContainer.style.display = isHidden ? 'block' : 'none';
-        btnToggleAdd.textContent = isHidden ? '- HIDE FORM' : '+ NEW CREDENTIAL';
-        if (window.audio) window.audio.playClick();
+  setupNewPassModalListeners() {
+    const form = document.getElementById('new-pass-form');
+    const btnOpen = document.getElementById('btn-open-new-pass');
+    const btnClose = document.getElementById('btn-close-new-pass');
+    const btnCancel = document.getElementById('btn-cancel-new-pass');
+    const btnGen = document.getElementById('btn-new-pass-gen');
+    const btnEye = document.getElementById('btn-new-pass-eye');
+    const inputVal = document.getElementById('new-pass-value');
+    const statusMsg = document.getElementById('new-pass-status');
+    const submitBtn = document.getElementById('btn-submit-new-pass');
+
+    if (btnOpen) {
+      btnOpen.addEventListener('click', () => {
+        this.openNewPassModal();
       });
     }
 
-    // Password generator buttons
-    const btnGenQuick = document.getElementById('btn-gen-quick');
-    const btnGenInForm = document.getElementById('btn-form-gen-pass');
-    const passInput = document.getElementById('pass-input-value');
+    if (btnGen && inputVal) {
+      btnGen.addEventListener('click', () => {
+        inputVal.value = this.generatePassword(18);
+        inputVal.type = 'text';
+        if (btnEye) {
+          btnEye.innerHTML = '<i data-lucide="eye-off"></i>';
+          if (window.lucide) window.lucide.createIcons({ root: btnEye });
+        }
+        if (window.audio) window.audio.playSuccess();
+      });
+    }
 
-    const generateAndFill = () => {
-      const pwd = this.generatePassword(18);
-      if (passInput) {
-        passInput.value = pwd;
-        passInput.type = 'text'; // Show when generated
+    if (btnEye && inputVal) {
+      btnEye.addEventListener('click', () => {
+        const isPassword = inputVal.type === 'password';
+        inputVal.type = isPassword ? 'text' : 'password';
+        btnEye.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}"></i>`;
+        if (window.lucide) window.lucide.createIcons({ root: btnEye });
+      });
+    }
+
+    const closeHandler = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
       }
-      if (window.audio) window.audio.playSuccess();
-      return pwd;
+      this.closeNewPassModal();
     };
 
-    if (btnGenInForm) btnGenInForm.addEventListener('click', generateAndFill);
-    if (btnGenQuick) {
-      btnGenQuick.addEventListener('click', () => {
-        // Open form if closed and populate
-        if (formContainer && formContainer.style.display === 'none') {
-          formContainer.style.display = 'block';
-          if (btnToggleAdd) btnToggleAdd.textContent = '- HIDE FORM';
-        }
-        generateAndFill();
-        if (passInput) passInput.focus();
-      });
-    }
+    if (btnClose) btnClose.addEventListener('click', closeHandler);
+    if (btnCancel) btnCancel.addEventListener('click', closeHandler);
 
-    // Add password form submission
-    const form = document.getElementById('add-password-form');
     if (form) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.handleAddPassword();
+        const inputPath = document.getElementById('new-pass-path');
+        const inputUser = document.getElementById('new-pass-user');
+        const inputNotes = document.getElementById('new-pass-notes');
+
+        const path = inputPath ? inputPath.value.trim() : '';
+        const password = inputVal ? inputVal.value : '';
+        const username = inputUser ? inputUser.value.trim() : '';
+        const notes = inputNotes ? inputNotes.value.trim() : '';
+
+        if (!path || !password) {
+          if (window.toast) window.toast.error('Please provide both Path and Password.');
+          return;
+        }
+
+        try {
+          window.storage.addPassword({
+            path,
+            password,
+            username,
+            notes
+          });
+
+          this.closeNewPassModal();
+          this.renderList();
+
+          if (window.toast) window.toast.success(`Saved "${path}" to local vault.`);
+          if (window.audio) window.audio.playSuccess();
+        } catch (err) {
+          console.error('[PASS] Add failed:', err);
+          if (statusMsg) {
+            statusMsg.style.display = 'block';
+            statusMsg.style.color = 'var(--tui-danger, #ff3b00)';
+            statusMsg.textContent = `! ERROR: ${err.message}`;
+          }
+          if (window.audio) window.audio.playAlarm();
+        }
       });
     }
+  }
+
+  openNewPassModal() {
+    const dialog = document.getElementById('new-pass-dialog');
+    const form = document.getElementById('new-pass-form');
+    const inputPath = document.getElementById('new-pass-path');
+    const inputVal = document.getElementById('new-pass-value');
+    const statusMsg = document.getElementById('new-pass-status');
+
+    if (form) form.reset();
+    if (inputVal) inputVal.type = 'password';
+    if (statusMsg) {
+      statusMsg.style.display = 'none';
+      statusMsg.textContent = '';
+    }
+
+    if (dialog) {
+      if (typeof dialog.showModal === 'function') {
+        try {
+          if (!dialog.open) dialog.showModal();
+        } catch (_) {
+          dialog.setAttribute('open', '');
+        }
+      } else {
+        dialog.setAttribute('open', '');
+      }
+    }
+
+    setTimeout(() => {
+      if (inputPath) inputPath.focus();
+    }, 100);
+
+    if (window.lucide) window.lucide.createIcons({ root: dialog });
+    if (window.audio) window.audio.playClick();
+  }
+
+  closeNewPassModal() {
+    const dialog = document.getElementById('new-pass-dialog');
+    if (!dialog) return;
+    if (typeof dialog.close === 'function') {
+      try {
+        if (dialog.open) dialog.close();
+      } catch (_) {
+        dialog.removeAttribute('open');
+      }
+    } else {
+      dialog.removeAttribute('open');
+    }
+    if (window.audio) window.audio.playClick();
   }
 
   generatePassword(length = 18) {
     const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+~=-';
     let result = '';
     const cryptoObj = window.crypto || window.msCrypto;
-    if (cryptoObj && cryptoObj.getRandomValues) {
-      const values = new Uint32Array(length);
-      cryptoObj.getRandomValues(values);
-      for (let i = 0; i < length; i++) {
-        result += chars[values[i] % chars.length];
-      }
-    } else {
-      for (let i = 0; i < length; i++) {
-        result += chars[Math.floor(Math.random() * chars.length)];
-      }
+    const values = new Uint32Array(length);
+    cryptoObj.getRandomValues(values);
+    for (let i = 0; i < length; i++) {
+      result += chars[values[i] % chars.length];
     }
     return result;
   }
 
-  handleAddPassword() {
-    const inputPath = document.getElementById('pass-input-path');
-    const inputUser = document.getElementById('pass-input-user');
-    const inputPass = document.getElementById('pass-input-value');
-    const inputNotes = document.getElementById('pass-input-notes');
-
-    if (!inputPath || !inputPath.value.trim()) {
-      alert('ERROR: Please provide a path/service name (e.g., github.com/user or email/work).');
-      return;
-    }
-
-    const path = inputPath.value.trim();
-    const username = inputUser ? inputUser.value.trim() : '';
-    const password = inputPass ? inputPass.value : '';
-    const notes = inputNotes ? inputNotes.value.trim() : '';
-
-    window.storage.addPassword({
-      path,
-      username,
-      password,
-      notes
-    });
-
-    // Reset form
-    inputPath.value = '';
-    if (inputUser) inputUser.value = '';
-    if (inputPass) inputPass.value = '';
-    if (inputNotes) inputNotes.value = '';
-
-    if (window.audio) window.audio.playSuccess();
-    this.renderList();
-  }
-
   copyToClipboard(text, btnElement) {
     if (!navigator.clipboard) {
-      // Fallback
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
@@ -153,11 +212,12 @@ class PasswordVault {
     }
 
     if (btnElement) {
-      btnElement.innerHTML = '<i data-lucide="check"></i>';
+      const origHtml = btnElement.innerHTML;
+      btnElement.innerHTML = '<i data-lucide="check"></i> COPIED';
       btnElement.classList.add('btn-highlight');
       if (window.lucide) window.lucide.createIcons({ root: btnElement });
       setTimeout(() => {
-        btnElement.innerHTML = '<i data-lucide="copy"></i>';
+        btnElement.innerHTML = origHtml;
         btnElement.classList.remove('btn-highlight');
         if (window.lucide) window.lucide.createIcons({ root: btnElement });
       }, 1500);
@@ -182,7 +242,6 @@ class PasswordVault {
 
   renderList() {
     const container = document.getElementById('passwords-list');
-    const countBadge = document.getElementById('pass-count-badge');
     if (!container) return;
 
     let items = window.storage.getPasswords();
@@ -195,17 +254,13 @@ class PasswordVault {
       );
     }
 
-    if (countBadge) {
-      countBadge.textContent = `TOTAL: ${items.length}`;
-    }
-
     if (items.length === 0) {
       container.innerHTML = `
         <div class="tui-box-empty">
-          ┌──────────────────────────────────────────────┐<br>
-          │ NO CREDENTIALS FOUND.                        │<br>
-          │ Tap + NEW CREDENTIAL to add a secret.        │<br>
-          └──────────────────────────────────────────────┘
+          <div class="tui-empty-frame">
+            <div class="tui-empty-title">${this.searchQuery ? 'NO MATCHING PASSWORDS' : 'NO PASSWORDS STORED'}</div>
+            <div class="tui-empty-hint">${this.searchQuery ? 'Adjust the search filter above.' : 'Tap + NEW to add a credential to your local vault.'}</div>
+          </div>
         </div>
       `;
       return;
@@ -214,27 +269,25 @@ class PasswordVault {
     let html = '';
     items.forEach(p => {
       const isRevealed = this.revealedIds.has(p.id);
-      const displayPass = isRevealed ? this.escapeHtml(p.password) : '****************';
 
       html += `
-        <div class="tui-card pass-card" data-id="${p.id}">
-          <div class="tui-card-header">
-            <span class="pass-path">> ${this.escapeHtml(p.path)}</span>
+        <div class="pass-compact-row" data-id="${p.id}">
+          <div class="pass-compact-main">
+            <div class="pass-compact-header">
+              <span class="pass-path">> ${this.escapeHtml(p.path)}</span>
+              ${p.username ? `<span class="pass-user-tag">@${this.escapeHtml(p.username)}</span>` : ''}
+            </div>
+            ${isRevealed ? `<div class="pass-revealed-val">${this.escapeHtml(p.password)}</div>` : ''}
+            ${p.notes ? `<div class="pass-notes-val">${this.escapeHtml(p.notes)}</div>` : ''}
           </div>
-          ${p.username ? `<div class="pass-row"><span class="tui-dim">User:</span> ${this.escapeHtml(p.username)}</div>` : ''}
-          <div class="pass-row">
-            <span class="tui-dim">Pass:</span>
-            <span class="pass-secret ${isRevealed ? 'pass-unmasked' : ''}">${displayPass}</span>
-          </div>
-          ${p.notes ? `<div class="pass-notes"><span class="tui-dim">Note:</span> ${this.escapeHtml(p.notes)}</div>` : ''}
-          <div class="tui-card-actions pass-card-actions">
-            <button class="tui-btn btn-icon btn-highlight" data-action="copy-pass" title="Copy Password">
-              <i data-lucide="copy"></i>
+          <div class="pass-compact-actions">
+            <button class="tui-btn btn-highlight btn-sm" data-action="copy-pass" title="Copy Password">
+              <i data-lucide="copy"></i> COPY
             </button>
-            <button class="tui-btn btn-icon" data-action="toggle-show" title="${isRevealed ? 'Hide Password' : 'Show Password'}">
+            <button class="tui-btn btn-icon btn-sm" data-action="toggle-show" title="${isRevealed ? 'Hide Password' : 'Show Password'}">
               <i data-lucide="${isRevealed ? 'eye-off' : 'eye'}"></i>
             </button>
-            <button class="tui-btn btn-icon btn-danger" data-action="delete-pass" title="Delete Credential">
+            <button class="tui-btn btn-icon btn-sm btn-dim" data-action="delete-pass" title="Delete Credential">
               <i data-lucide="trash-2"></i>
             </button>
           </div>
@@ -243,17 +296,17 @@ class PasswordVault {
     });
 
     container.innerHTML = html;
-    if (window.lucide) window.lucide.createIcons();
+    if (window.lucide) window.lucide.createIcons({ root: container });
 
     // Attach listeners
-    container.querySelectorAll('.pass-card').forEach(card => {
-      const id = card.getAttribute('data-id');
+    container.querySelectorAll('.pass-compact-row').forEach(row => {
+      const id = row.getAttribute('data-id');
       const item = window.storage.getPasswords().find(p => p.id === id);
       if (!item) return;
 
-      const btnCopy = card.querySelector('[data-action="copy-pass"]');
-      const btnShow = card.querySelector('[data-action="toggle-show"]');
-      const btnDel = card.querySelector('[data-action="delete-pass"]');
+      const btnCopy = row.querySelector('[data-action="copy-pass"]');
+      const btnShow = row.querySelector('[data-action="toggle-show"]');
+      const btnDel = row.querySelector('[data-action="delete-pass"]');
 
       if (btnCopy) {
         btnCopy.addEventListener('click', (e) => {
@@ -267,9 +320,11 @@ class PasswordVault {
       }
       if (btnDel) {
         btnDel.addEventListener('click', () => {
-          if (confirm(`WARNING: Delete credential "${item.path}"?`)) {
+          if (confirm(`Remove "${item.path}" from local vault?`)) {
             window.storage.deletePassword(id);
+            if (window.toast) window.toast.info(`Removed "${item.path}".`);
             if (window.audio) window.audio.playClick();
+            this.renderList();
           }
         });
       }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>MEIL // TUI Vault & Reminders</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,27 +16,30 @@
   <header class="tui-header">
     <div class="header-top-row">
       <span class="header-app-title">MEIL</span>
+      <span class="header-status-pill" id="header-gh-status">GH: LOCAL</span>
       <div class="header-top-right">
-        <span class="header-status-pill" id="header-gh-status">GH: LOCAL</span>
-        <button class="header-interactive-btn btn-icon" id="header-theme-toggle" title="Toggle Light / Dark Mode"><i data-lucide="sun"></i></button>
-        <button class="header-interactive-btn btn-icon" id="header-notif-status" title="Toggle Notifications"><i data-lucide="bell"></i></button>
-        <button class="header-interactive-btn btn-icon" id="header-settings-btn" title="Open Settings" onclick="if(window.app &amp;&amp; window.app.openSettingsModal){window.app.openSettingsModal();}else{const d=document.getElementById('settings-dialog');if(d){typeof d.showModal==='function'?d.showModal():d.setAttribute('open','');}}"><i data-lucide="settings"></i></button>
+        <button class="header-interactive-btn btn-icon" id="header-theme-toggle" title="Toggle Light / Dark Mode" aria-label="Toggle Light / Dark Mode"><i data-lucide="sun"></i></button>
+        <button class="header-interactive-btn btn-icon" id="header-notif-status" title="Toggle Notifications" aria-label="Toggle Notifications"><i data-lucide="bell"></i></button>
+        <button class="header-interactive-btn btn-icon" id="header-settings-btn" title="Open Settings" aria-label="Open Settings"><i data-lucide="settings"></i></button>
       </div>
-    </div>
-
-    <div class="header-stats-row">
-      <span id="header-clock">00:00:00</span>
-      <span id="header-rem-count">REM: 0</span>
-      <span id="header-pass-count">PASS: 0</span>
-      <span id="header-rss-count">RSS: 0</span>
     </div>
 
     <div class="header-swipe-indicator">
       <button class="tui-arrow-btn" id="swipe-arrow-left" aria-label="Previous Screen"><i data-lucide="chevron-left"></i></button>
       <div class="swipe-title-wrap">
         <span id="swipe-screen-title">CALENDAR</span>
+        <div class="swipe-dots" id="swipe-dots" role="tablist" aria-label="Screens"></div>
       </div>
       <button class="tui-arrow-btn" id="swipe-arrow-right" aria-label="Next Screen"><i data-lucide="chevron-right"></i></button>
+    </div>
+
+    <div class="header-stats-row">
+      <span id="header-clock">00:00:00</span>
+      <span class="header-stats-metrics">
+        <span id="header-rem-count">REM: 0</span>
+        <span id="header-pass-count">PASS: 0</span>
+        <span id="header-rss-count">RSS: 0</span>
+      </span>
     </div>
   </header>
 
@@ -120,83 +123,38 @@
         </form>
       </div>
 
-      <div class="tui-box-empty">
-        &lt;&lt; Swipe Left for Passwords Vault &gt;&gt;
+      <div class="tui-box-empty swipe-hint">
+        &gt;&gt; SWIPE FOR PASSWORDS &amp; NEWS
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- SCREEN 2: PASSWORDS VAULT (pass CLI style) -->
+    <!-- SCREEN 2: PASSWORDS (pass CLI style)       -->
     <!-- ========================================== -->
     <section class="tui-screen" id="screen-passwords">
       <div class="tui-section-title">
-        <span>PASSWORDS & CREDENTIAL VAULT</span>
+        <span>PASSWORDS (LOCAL VAULT)</span>
       </div>
 
-      <!-- Search Bar -->
-      <div class="pass-search-bar">
-        <input type="text" class="tui-input" id="pass-search-input" placeholder=">_ SEARCH PASSWORDS..." autocomplete="off">
-        <button class="tui-btn btn-icon" id="pass-search-clear" title="Clear Search"><i data-lucide="x"></i></button>
-      </div>
-
-      <!-- Action Bar -->
-      <div class="pass-actions-bar">
-        <button class="tui-btn btn-highlight" id="btn-toggle-add-pass">
-          + NEW CREDENTIAL
-        </button>
-        <button class="tui-btn" id="btn-gen-quick">
-          GEN PASSWORD
-        </button>
-      </div>
-
-      <!-- Collapsible Add Credential Form -->
-      <div class="tui-panel" id="add-pass-container" style="display: none;">
-        <div class="tui-panel-header">
-          <span>&gt;_ INSERT NEW CREDENTIAL</span>
+      <!-- Search & Lock Header Bar -->
+      <div class="screen-toolbar">
+        <div class="pass-search-bar">
+          <div class="tui-input-wrap">
+            <input type="text" class="tui-input" id="pass-search-input" placeholder=">_ SEARCH PASSWORDS..." autocomplete="off">
+            <button class="input-clear-btn" id="pass-search-clear" title="Clear Search" aria-label="Clear Search"><i data-lucide="x"></i></button>
+          </div>
         </div>
 
-        <form id="add-password-form">
-          <div class="tui-form-group">
-            <label class="tui-label">SERVICE / PATH (e.g. github.com/user, wifi/home):</label>
-            <input type="text" class="tui-input" id="pass-input-path" placeholder="services/github" required autocomplete="off">
-          </div>
-
-          <div class="tui-form-group">
-            <label class="tui-label">USERNAME / LOGIN (OPTIONAL):</label>
-            <input type="text" class="tui-input" id="pass-input-user" placeholder="user@example.com" autocomplete="off">
-          </div>
-
-          <div class="tui-form-group">
-            <label class="tui-label">PASSWORD / SECRET:</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="password" class="tui-input" id="pass-input-value" placeholder="Enter or generate secret" required autocomplete="new-password">
-              <button type="button" class="tui-btn btn-icon" id="btn-form-gen-pass" title="Generate Password"><i data-lucide="key-round"></i></button>
-            </div>
-          </div>
-
-          <div class="tui-form-group">
-            <label class="tui-label">NOTES / SCOPES (OPTIONAL):</label>
-            <textarea class="tui-textarea" id="pass-input-notes" rows="2" placeholder="Recovery codes, PIN, extra notes..."></textarea>
-          </div>
-
-          <button type="submit" class="tui-btn btn-highlight tui-btn-full">
-            SAVE TO VAULT
+        <div class="pass-toolbar">
+          <button class="tui-btn btn-highlight" id="btn-open-new-pass" title="Add New Password (Local Vault)">
+            <i data-lucide="plus"></i> NEW
           </button>
-        </form>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span class="tui-dim">STORED ENTRIES</span>
-        <span class="tui-dim" id="pass-count-badge">TOTAL: 0</span>
+        </div>
       </div>
 
       <!-- Passwords List -->
       <div id="passwords-list">
         <!-- Rendered by passwords.js -->
-      </div>
-
-      <div class="tui-box-empty">
-        &lt;&lt; Swipe Left for RSS Feeds | Swipe Right for Calendar &gt;&gt;
       </div>
     </section>
 
@@ -209,25 +167,29 @@
       </div>
 
       <!-- Search Bar -->
-      <div class="rss-search-bar">
-        <input type="text" class="tui-input" id="rss-search-input" placeholder=">_ FILTER HEADLINES..." autocomplete="off">
-        <button class="tui-btn btn-icon" id="rss-search-clear" title="Clear Search"><i data-lucide="x"></i></button>
-      </div>
+      <div class="screen-toolbar">
+        <div class="rss-search-bar">
+          <div class="tui-input-wrap">
+            <input type="text" class="tui-input" id="rss-search-input" placeholder=">_ FILTER HEADLINES..." autocomplete="off">
+            <button class="input-clear-btn" id="rss-search-clear" title="Clear Search" aria-label="Clear Search"><i data-lucide="x"></i></button>
+          </div>
+        </div>
 
-      <!-- Action Bar -->
-      <div class="rss-actions-bar">
-        <button class="tui-btn btn-highlight" id="btn-refresh-rss" title="Refresh All Feeds">
-          <i data-lucide="refresh-cw"></i> REFRESH
-        </button>
-        <button class="tui-btn" id="btn-toggle-add-feed">
-          + FEED
-        </button>
-        <button class="tui-btn" id="btn-mark-all-read" title="Mark All as Read">
-          <i data-lucide="check"></i> READ ALL
-        </button>
-        <button class="tui-btn btn-icon" id="btn-toggle-manage-feeds" title="Manage Subscribed Feeds &amp; OPML">
-          <i data-lucide="filter"></i>
-        </button>
+        <!-- Action Bar -->
+        <div class="rss-actions-bar">
+          <button class="tui-btn btn-highlight" id="btn-refresh-rss" title="Refresh All Feeds">
+            <i data-lucide="refresh-cw"></i> REFRESH
+          </button>
+          <button class="tui-btn" id="btn-toggle-add-feed" title="Subscribe a New Feed">
+            <i data-lucide="plus"></i> <span class="btn-label">FEED</span>
+          </button>
+          <button class="tui-btn" id="btn-mark-all-read" title="Mark All as Read">
+            <i data-lucide="check"></i> READ ALL
+          </button>
+          <button class="tui-btn" id="btn-toggle-manage-feeds" title="Manage Subscribed Feeds &amp; OPML">
+            <i data-lucide="filter"></i> MANAGE
+          </button>
+        </div>
       </div>
 
       <!-- Filter Controls: Feed Dropdown & Tabs -->
@@ -257,7 +219,7 @@
         <form id="add-feed-form">
           <div class="tui-form-group">
             <label class="tui-label">FEED URL (RSS, ATOM, XML):</label>
-            <input type="url" class="tui-input" id="feed-input-url" placeholder="https://news.ycombinator.com/rss" required autocomplete="off">
+            <input type="text" inputmode="url" class="tui-input" id="feed-input-url" placeholder="news.ycombinator.com/rss" required autocomplete="off" autocapitalize="off" spellcheck="false">
           </div>
 
           <div class="form-row-2col">
@@ -316,8 +278,8 @@
         <!-- Rendered dynamically by rss.js -->
       </div>
 
-      <div class="tui-box-empty">
-        &lt;&lt; Swipe Right for Passwords &amp; Calendar &gt;&gt;
+      <div class="tui-box-empty swipe-hint">
+        &gt;&gt; SWIPE FOR CALENDAR &amp; PASSWORDS
       </div>
     </section>
 
@@ -326,143 +288,77 @@
   <!-- Interactive TUI Settings Modal Dialog -->
   <dialog class="tui-modal settings-modal" id="settings-dialog">
     <div class="settings-modal-topbar">
-      <span class="settings-modal-title">&gt;_ SETTINGS &amp; SYSTEM CONFIG</span>
-      <button class="tui-btn btn-icon btn-danger" id="btn-close-settings" title="Close Settings" onclick="if(window.app &amp;&amp; window.app.closeSettingsModal){window.app.closeSettingsModal();}else{const d=document.getElementById('settings-dialog');if(d){typeof d.close==='function'?d.close():d.removeAttribute('open');}}">
+      <span class="settings-modal-title">&gt;_ SETTINGS</span>
+      <button class="tui-btn btn-icon btn-danger" id="btn-close-settings" title="Close Settings" aria-label="Close Settings">
         <i data-lucide="x"></i>
       </button>
     </div>
     <div class="tui-modal-body settings-modal-body">
-      <!-- Storage Info -->
+      <!-- GitHub Vault Backup (Reminders & Feeds Only) -->
       <div class="settings-section">
-        <div class="settings-section-title">SYSTEM STATUS</div>
-        <div class="settings-info-row"><span class="settings-info-label">ENGINE:</span> <span class="settings-info-val">localStorage (Client-Side)</span></div>
-        <div class="settings-info-row"><span class="settings-info-label">VAULT:</span> <span class="settings-info-val" id="settings-vault-stats">Loading...</span></div>
-        <div class="settings-info-row"><span class="settings-info-label">SYNC:</span> <span class="settings-info-val" id="settings-gh-status">STATUS: LOCAL ONLY</span></div>
-      </div>
-
-      <!-- Appearance & Theme -->
-      <div class="settings-section">
-        <div class="settings-section-title">APPEARANCE &amp; THEME</div>
-        <div class="settings-theme-row">
-          <div class="settings-theme-info">
-            <span class="theme-palette-indicator"></span>
-            <span>Palette: Amber Gold (#FFBF00)</span>
-          </div>
-          <button class="tui-btn btn-highlight" id="btn-theme-toggle-settings">
-            THEME: DARK
-          </button>
-        </div>
-      </div>
-
-      <!-- GitHub Repo Sync -->
-      <div class="settings-section">
-        <div class="settings-section-title">GITHUB REPOSITORY SYNC</div>
+        <div class="settings-section-title">GITHUB VAULT BACKUP</div>
         <p class="settings-section-desc">
-          Direct REST API sync with your GitHub repo (stores encrypted/plain vault JSON).
+          Backup reminders and RSS feeds to GitHub. For security, passwords remain local-only on this device and are purged from cloud sync.
         </p>
 
-        <div class="tui-form-group">
-          <label class="tui-label">PERSONAL ACCESS TOKEN (PAT with repo scope):</label>
-          <input type="password" class="tui-input" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-        </div>
-
-        <div class="tui-form-group">
-          <label class="tui-label">REPOSITORY (owner/repo):</label>
-          <input type="text" class="tui-input" id="gh-repo-input" placeholder="jaigansa/pass-store" autocomplete="off" spellcheck="false">
-        </div>
-
-        <div class="settings-row-branch-path">
+        <div class="settings-row-2col">
           <div class="tui-form-group">
             <label class="tui-label">BRANCH:</label>
-            <input type="text" class="tui-input" id="gh-branch-input" value="main" autocomplete="off" spellcheck="false">
+            <input type="text" class="tui-input" id="gh-branch-input" placeholder="main" autocomplete="off" autocapitalize="off" spellcheck="false">
           </div>
           <div class="tui-form-group">
-            <label class="tui-label">FILE PATH:</label>
-            <input type="text" class="tui-input" id="gh-path-input" value="memory_vault.json" autocomplete="off" spellcheck="false">
+            <label class="tui-label">VAULT BACKUP PATH:</label>
+            <input type="text" class="tui-input" id="gh-path-input" placeholder="memory_vault.json" autocomplete="off" autocapitalize="off" spellcheck="false">
           </div>
         </div>
 
-        <div class="toggle-switch-row">
-          <label for="gh-autosync-toggle" class="toggle-switch-label">Auto-sync on every save</label>
+        <div class="tui-form-group">
+          <label class="tui-label">GITHUB PERSONAL ACCESS TOKEN:</label>
+          <input type="password" class="tui-input" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+
+        <div class="tui-form-group">
+          <label class="tui-label">GITHUB REPOSITORY URL (or owner/repo):</label>
+          <input type="text" class="tui-input" id="gh-repo-input" placeholder="https://github.com/owner/meil-vault" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+
+        <div class="toggle-switch-row" style="margin-top: 6px; margin-bottom: 8px;">
+          <label for="gh-autosync-toggle" class="toggle-switch-label">Auto-sync on save (Reminders &amp; Feeds)</label>
           <input type="checkbox" id="gh-autosync-toggle">
         </div>
 
-        <div class="settings-btn-grid" style="margin-top: 10px; margin-bottom: 6px;">
-          <button class="tui-btn btn-highlight" id="btn-save-gh-settings">
-            SAVE CONFIG
+        <div class="settings-btn-grid settings-btn-grid-3">
+          <button class="tui-btn" id="btn-gh-test" title="Verify Token &amp; Repository Access">
+            <i data-lucide="plug-zap"></i> TEST
           </button>
-          <button class="tui-btn" id="btn-gh-test" title="Verify GitHub credentials &amp; repo access">
-            <i data-lucide="activity"></i> TEST REPO
+          <button class="tui-btn" id="btn-gh-pull" title="Pull Reminders &amp; Feeds from GitHub">
+            <i data-lucide="cloud-download"></i> PULL
           </button>
-        </div>
-
-        <div class="settings-btn-grid">
-          <button class="tui-btn" id="btn-gh-push">
-            <i data-lucide="upload"></i> PUSH TO GH
-          </button>
-          <button class="tui-btn" id="btn-gh-pull">
-            <i data-lucide="download"></i> PULL FROM GH
+          <button class="tui-btn" id="btn-gh-push" title="Push Reminders &amp; Feeds to GitHub">
+            <i data-lucide="cloud-upload"></i> PUSH
           </button>
         </div>
 
-        <div id="gh-sync-details" class="tui-dim" style="font-size: 11px; margin-top: 8px; word-break: break-all;"></div>
+        <button class="tui-btn btn-highlight tui-btn-full" id="btn-save-gh-settings" style="margin-top: 8px; font-weight: bold;">
+          SAVE CONFIG &amp; SYNC
+        </button>
+
+        <div id="gh-sync-details" class="tui-dim" style="font-size: 11px; margin-top: 8px; word-break: break-word;"></div>
+        <div id="settings-vault-stats" class="tui-dim settings-vault-stats"></div>
       </div>
 
-      <!-- Unix Pass CLI Integration -->
+      <!-- Sound Preferences -->
       <div class="settings-section">
-        <div class="settings-section-title">UNIX PASS CLI BRIDGE</div>
-        <p class="settings-section-desc">
-          Export all credentials &amp; memories into an automated script for ~/.password-store.
-        </p>
-        <button class="tui-btn tui-btn-full" id="btn-export-pass-script">
-          v EXPORT PASS CLI SCRIPT (pass_import.sh)
-        </button>
-        <button class="tui-btn tui-btn-full" id="btn-pass-info" style="margin-top: 6px;">
-          INFO: HOW TO SYNC WITH LOCAL PASS CLI
-        </button>
-      </div>
-
-      <!-- Audio & Notifications -->
-      <div class="settings-section">
-        <div class="settings-section-title">AUDIO &amp; ALERTS</div>
+        <div class="settings-section-title">SOUND</div>
         <div class="toggle-switch-row">
-          <label for="settings-sound-toggle" class="toggle-switch-label">8-Bit Synthesizer Chimes</label>
+          <label for="settings-sound-toggle" class="toggle-switch-label">8-Bit Synthesizer Audio</label>
           <input type="checkbox" id="settings-sound-toggle" checked>
         </div>
-        <div class="settings-btn-grid">
-          <button class="tui-btn" id="btn-test-sound" title="Test Audio Chime">
-            <i data-lucide="volume-2"></i> TEST CHIME
-          </button>
-          <button class="tui-btn" id="btn-test-notif" title="Test Notification">
-            <i data-lucide="bell-ring"></i> TEST ALERT
-          </button>
-        </div>
-      </div>
-
-      <!-- Backup & Maintenance -->
-      <div class="settings-section">
-        <div class="settings-section-title">BACKUP &amp; MAINTENANCE</div>
-        <div class="settings-btn-grid" style="margin-bottom: 8px; margin-top: 0;">
-          <button class="tui-btn" id="btn-export-json">
-            <i data-lucide="download"></i> EXPORT JSON
-          </button>
-          <button class="tui-btn" id="btn-import-json">
-            <i data-lucide="upload"></i> IMPORT JSON
-          </button>
-          <input type="file" id="file-import-input" accept=".json" style="display: none;">
-        </div>
-
-        <button class="tui-btn btn-danger tui-btn-full" id="btn-purge-completed" style="margin-bottom: 6px;">
-          ! PURGE COMPLETED REMINDERS
-        </button>
-        <button class="tui-btn btn-danger tui-btn-full" id="btn-reset-all">
-          !!! FACTORY RESET MEIL
-        </button>
       </div>
     </div>
     <div class="settings-modal-footer">
       <span class="settings-footer-hint tui-dim">&gt;_ PRESS ESC TO EXIT</span>
-      <button class="tui-btn" id="btn-close-settings-footer" onclick="if(window.app &amp;&amp; window.app.closeSettingsModal){window.app.closeSettingsModal();}else{const d=document.getElementById('settings-dialog');if(d){typeof d.close==='function'?d.close():d.removeAttribute('open');}}">
+      <button class="tui-btn" id="btn-close-settings-footer">
         CLOSE [ESC]
       </button>
     </div>
@@ -540,16 +436,72 @@
     </div>
   </dialog>
 
+  <!-- New Pass Credential Modal (Local Storage Only) -->
+  <dialog class="tui-modal" id="new-pass-dialog" style="border: 2px solid var(--tui-border); box-shadow: 0 0 25px rgba(255, 191, 0, 0.4);">
+    <div class="settings-modal-topbar">
+      <span class="settings-modal-title" id="new-pass-dialog-title">&gt;_ NEW CREDENTIAL (LOCAL)</span>
+      <button class="tui-btn btn-icon btn-danger" id="btn-close-new-pass" title="Close">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="tui-modal-body" style="padding: 16px 12px 12px 12px;">
+      <p class="tui-dim" style="font-size: 11px; margin-bottom: 10px; line-height: 1.4;">
+        Saved locally in your browser vault. Passwords are never sent to GitHub or any remote repository.
+      </p>
+
+      <form id="new-pass-form">
+        <div class="tui-form-group">
+          <label class="tui-label">PATH (e.g. email/gmail, servers/hetzner):</label>
+          <input type="text" class="tui-input" id="new-pass-path" placeholder="services/github" required autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="tui-form-group">
+          <label class="tui-label">PASSWORD / SECRET:</label>
+          <div class="pass-secret-row">
+            <input type="password" class="tui-input" id="new-pass-value" placeholder="Enter password or generate" required autocomplete="new-password" autocapitalize="off" spellcheck="false">
+            <button type="button" class="tui-btn btn-icon" id="btn-new-pass-gen" title="Generate 18-char Password">
+              <i data-lucide="key-round"></i>
+            </button>
+            <button type="button" class="tui-btn btn-icon" id="btn-new-pass-eye" title="Show / Hide Password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="tui-form-group">
+          <label class="tui-label">USERNAME / LOGIN (OPTIONAL):</label>
+          <input type="text" class="tui-input" id="new-pass-user" placeholder="user@example.com" autocomplete="off">
+        </div>
+
+        <div class="tui-form-group">
+          <label class="tui-label">NOTES (OPTIONAL):</label>
+          <textarea class="tui-textarea" id="new-pass-notes" rows="2" placeholder="Recovery codes, PIN, extra notes..."></textarea>
+        </div>
+
+        <div id="new-pass-status" class="tui-dim" style="font-size: 11px; margin-bottom: 8px; display: none;"></div>
+
+        <div class="settings-btn-grid" style="margin-top: 12px;">
+          <button type="submit" class="tui-btn btn-highlight" id="btn-submit-new-pass">
+            <i data-lucide="plus"></i> SAVE CREDENTIAL
+          </button>
+          <button type="button" class="tui-btn" id="btn-cancel-new-pass">
+            CANCEL
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <!-- Scripts in dependency order -->
   <script src="js/lucide.min.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/toast.js"></script>
   <script src="js/notifier.js"></script>
   <script src="js/calendar.js"></script>
   <script src="js/passwords.js"></script>
   <script src="js/rss.js"></script>
   <script src="js/github_sync.js"></script>
-  <script src="js/pass_bridge.js"></script>
   <script src="js/swipe.js"></script>
   <script src="js/app.js"></script>
 </body>

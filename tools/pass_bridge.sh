@@ -14,8 +14,7 @@ Usage: $0 [COMMAND] [VAULT_FILE]
 
 Commands:
   status        Show pass store and vault sync status
-  import        Import from JSON vault into pass CLI
-  git-push      Commit and push pass repo to remote GitHub origin
+  import        Import from JSON vault into local pass CLI
   help          Display this help message
 
 Default VAULT_FILE: memory_vault.json
@@ -84,8 +83,10 @@ EOF_ENTRY
 }
 
 cmd_git_push() {
-    echo "[INFO] Running 'pass git push'..."
-    pass git push origin main || pass git push origin master
+    echo "[SECURITY WARNING] Remote git push of pass store to GitHub is disabled."
+    echo "Storing password repositories on GitHub poses credential exposure and security risks."
+    echo "Keep your password store local or use verified offline backups."
+    exit 1
 }
 
 # --- Main Dispatcher ---

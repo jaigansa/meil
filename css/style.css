@@ -59,7 +59,7 @@
 }
 
 html, body {
-  width: 100vw;
+  width: 100%;
   height: 100dvh;
   margin: 0;
   padding: 0;
@@ -70,7 +70,10 @@ html, body {
   font-size: 13px;
   line-height: 1.4;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-font-smoothing: antialiased;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -78,10 +81,17 @@ body {
   flex-direction: column;
 }
 
+/* Allow selecting/editable text inside fields and article bodies
+   even though the page itself is non-selectable (TUI behaviour) */
+input, textarea, .reader-content-body, a {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* --- Persistent Top Header & Screen Indicator --- */
 .tui-header {
   flex: 0 0 auto;
-  width: 100vw;
+  width: 100%;
   background: var(--tui-bg);
   border-bottom: 2px solid var(--tui-yellow);
   padding: max(6px, env(safe-area-inset-top)) 10px 6px;
@@ -216,7 +226,7 @@ body {
 /* --- Horizontal Swipe Track --- */
 .tui-track {
   flex: 1 1 0;
-  width: 100vw;
+  width: 100%;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -234,13 +244,16 @@ body {
 }
 
 .tui-screen {
-  flex: 0 0 100vw;
-  width: 100vw;
+  flex: 0 0 100%;
+  width: 100%;
   height: 100%;
   overflow-y: auto;
   scroll-snap-align: start;
   padding: 10px 10px max(34px, env(safe-area-inset-bottom, 24px));
-  touch-action: pan-y;
+  /* pan-x pan-y lets the browser route horizontal drags to the
+     track's scroll-snap while vertical drags scroll this screen.
+     pan-y alone blocks the horizontal swipe entirely on touch. */
+  touch-action: pan-x pan-y;
   overscroll-behavior-y: contain;
 }
 
@@ -671,22 +684,47 @@ body {
   background: #000;
 }
 
-/* --- Screen 2: Password Vault Specific Styling --- */
+/* --- Screen 2: Passwords (pass CLI style) --- */
 .pass-search-bar {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
-}
-
-.pass-actions-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
   margin-bottom: 10px;
 }
 
-.pass-card {
+.pass-search-bar .tui-input {
+  flex: 1;
+}
+
+.pass-compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--tui-border);
+  background: var(--tui-card-bg);
+  margin-bottom: 6px;
   border-left: 3px solid var(--tui-yellow);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.pass-compact-row:hover {
+  border-color: var(--tui-yellow-bright);
+}
+
+.pass-compact-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pass-compact-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .pass-path {
@@ -696,37 +734,66 @@ body {
   word-break: break-all;
 }
 
-.pass-row {
-  font-size: 12px;
-  margin: 3px 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  word-break: break-all;
+.pass-user-tag {
+  font-size: 11px;
+  color: var(--tui-text-dim);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--tui-border-dim);
+  padding: 1px 6px;
 }
 
-.pass-secret {
-  letter-spacing: 2px;
+.pass-locked-tag {
+  font-size: 9px;
+  font-weight: bold;
+  border: 1px solid var(--tui-border);
+  color: var(--tui-yellow);
+  padding: 1px 4px;
+  letter-spacing: 1px;
+}
+
+.pass-revealed-val {
+  font-size: 12px;
   font-weight: bold;
   color: var(--tui-heading);
-  font-size: 14px;
-}
-
-.pass-unmasked {
-  letter-spacing: normal;
-  color: var(--tui-yellow-bright);
   background: var(--tui-yellow-dark);
-  padding: 1px 4px;
+  padding: 3px 8px;
+  margin-top: 3px;
   word-break: break-all;
+  display: inline-block;
+  border-left: 2px solid var(--tui-yellow-bright);
+  font-family: var(--font-mono);
 }
 
-.pass-card-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 6px;
-  margin-top: 8px;
-  border-top: 1px dotted var(--tui-border-dim);
-  padding-top: 6px;
+.pass-notes-val {
+  font-size: 11px;
+  color: var(--tui-text-dim);
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.pass-compact-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.pass-compact-actions .btn-sm {
+  padding: 4px 8px;
+  font-size: 11px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pass-compact-actions .btn-dim {
+  color: var(--tui-text-dim);
+  opacity: 0.6;
+}
+
+.pass-compact-actions .btn-dim:hover {
+  opacity: 1;
 }
 
 .tui-dim {
@@ -1416,4 +1483,418 @@ dialog.settings-modal[open] {
 }
 .settings-modal-body::-webkit-scrollbar-thumb {
   background: var(--tui-yellow-dim);
+}
+
+/* ============================================================ */
+/* MOBILE UX REDESIGN                                           */
+/* ============================================================ */
+
+/* --- Tap feedback: kill double-tap zoom delay on all controls --- */
+button,
+.tui-radio-group label {
+  touch-action: manipulation;
+}
+
+/* --- Header: screen dots + condensed stats --- */
+.swipe-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 10px;
+}
+
+.swipe-dot {
+  /* 28px tap target; the visual 8px square is drawn by ::before */
+  position: relative;
+  width: 28px;
+  height: 28px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.swipe-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--tui-yellow-dim);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.swipe-dot.active::before {
+  background: var(--tui-amber);
+  border-color: var(--tui-amber);
+}
+
+.header-stats-metrics {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.header-stats-row {
+  gap: 8px;
+  min-width: 0;
+}
+
+#header-clock {
+  flex-shrink: 0;
+}
+
+/* --- Sticky screen toolbars (search + actions pinned on scroll) --- */
+.screen-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--tui-bg);
+  margin: 0 -10px 8px -10px;
+  padding: 8px 10px;
+  border-bottom: 1px dotted var(--tui-border-dim);
+  box-shadow: 0 8px 10px -8px rgba(0, 0, 0, 0.85);
+}
+
+.screen-toolbar .pass-search-bar,
+.screen-toolbar .rss-search-bar {
+  margin-bottom: 6px;
+}
+
+/* --- Input with trailing clear (X) button --- */
+.tui-input-wrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.tui-input-wrap .tui-input {
+  flex: 1;
+  min-width: 0;
+  padding-right: 44px;
+}
+
+.input-clear-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--tui-border-dim);
+  color: var(--tui-text-dim);
+  cursor: pointer;
+  transition: opacity 0.12s, color 0.12s;
+}
+
+.input-clear-btn .lucide {
+  width: 15px;
+  height: 15px;
+}
+
+.input-clear-btn:active {
+  background: var(--tui-amber);
+  color: #000;
+}
+
+/* Hide the X while the field is empty (graceful if :has is unsupported) */
+.tui-input-wrap:has(.tui-input:placeholder-shown) .input-clear-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- Passwords toolbar: SEARCH above [NEW] [UNLOCK] --- */
+.pass-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+/* --- New-password secret field: input + generate + reveal --- */
+.pass-secret-row {
+  display: flex;
+  gap: 6px;
+}
+
+.pass-secret-row .tui-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- RSS action bar: 2x2 grid on phones --- */
+.btn-label {
+  white-space: nowrap;
+}
+
+/* --- Settings: 3-col sync grid, vault stats --- */
+.settings-inline-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.settings-inline-label-row .tui-label {
+  margin-bottom: 0;
+}
+
+.tui-btn.btn-compact {
+  min-height: 36px;
+  padding: 5px 10px;
+  font-size: 11px;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.tui-btn.btn-compact .lucide {
+  width: 14px;
+  height: 14px;
+}
+
+.settings-btn-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.settings-vault-stats {
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  border-top: 1px dotted var(--tui-border-dim);
+  padding-top: 6px;
+  word-break: break-word;
+}
+
+/* --- Empty states: CSS frame replaces the old ASCII box --- */
+.tui-empty-frame {
+  border: 1px dashed var(--tui-border-dim);
+  background: var(--tui-surface);
+  padding: 18px 14px;
+  max-width: 460px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.tui-empty-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.tui-empty-hint {
+  font-size: 11px;
+  color: var(--tui-text-dim);
+  line-height: 1.5;
+}
+
+/* --- Swipe hint footer --- */
+.swipe-hint {
+  border: 1px dashed var(--tui-border-dim);
+  background: var(--tui-surface);
+  margin-top: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* --- Toast notifications (replaces blocking alert()) --- */
+#toast-host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.tui-toast {
+  pointer-events: auto;
+  width: min(460px, 100%);
+  background: var(--tui-surface);
+  border: 1px solid var(--tui-yellow);
+  color: var(--tui-text);
+  font-family: var(--tui-font);
+  font-size: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7), 0 0 12px var(--tui-glow);
+  transform: translateY(12px);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  overscroll-behavior: contain;
+}
+
+.tui-toast.toast-error {
+  border-color: var(--tui-danger);
+}
+
+.tui-toast.toast-success {
+  border-color: var(--tui-yellow-bright);
+}
+
+.toast-prefix {
+  flex-shrink: 0;
+  font-weight: bold;
+  color: var(--tui-yellow-bright);
+}
+
+.tui-toast.toast-error .toast-prefix {
+  color: var(--tui-danger);
+}
+
+.toast-msg {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.tui-toast.toast-in {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.tui-toast.toast-out {
+  transform: translateY(8px);
+  opacity: 0;
+}
+
+/* Taller dialogs (alarm/passphrase/new-pass) scroll instead of clipping */
+dialog.tui-modal:not(.settings-modal):not(.rss-reader-modal) {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* --- Mobile: bottom sheets + full-screen dialogs --- */
+@media (max-width: 600px) {
+  /* Alarm / passphrase / new-pass slide up from the bottom edge */
+  dialog.tui-modal:not(.settings-modal):not(.rss-reader-modal) {
+    inset: auto 0 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 90dvh;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    animation: tui-sheet-in 0.22s ease-out;
+  }
+
+  /* Settings takes the whole screen for comfortable form entry */
+  dialog.settings-modal {
+    inset: 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: none;
+  }
+
+  .settings-modal-footer {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Article reader gets full-screen for readable line length */
+  dialog.rss-reader-modal {
+    inset: 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Let the whole dialog scroll instead of a nested 48vh scroll box */
+  .reader-content-body {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* RSS actions: REFRESH / FEED / READ ALL / MANAGE in a 2x2 grid */
+  .rss-actions-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Comfortable touch targets */
+  .rss-tab-btn,
+  .rss-preset-chip,
+  .tui-radio-group label,
+  .toggle-switch-row {
+    min-height: 44px;
+  }
+
+  .tui-arrow-btn {
+    min-height: 44px;
+  }
+
+  .header-interactive-btn.btn-icon {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .tui-btn.btn-compact {
+    min-height: 44px;
+  }
+
+  .settings-btn-grid .tui-btn {
+    min-height: 44px;
+  }
+
+  .pass-compact-actions .btn-sm {
+    min-height: 44px;
+    height: auto;
+  }
+
+  .cal-day {
+    min-height: 44px;
+  }
+
+  /* Condense header stats on very narrow phones */
+  .header-stats-row,
+  .header-stats-metrics {
+    font-size: 10px;
+    gap: 6px;
+  }
+}
+
+@keyframes tui-sheet-in {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.tui-modal {
+    animation: none !important;
+  }
+  .tui-toast {
+    transition: none;
+  }
 }

@@ -8,6 +8,7 @@ class NotifierService {
   constructor() {
     this.pollInterval = null;
     this.activeAlarmItem = null;
+    this.pendingAlarms = [];
     this.init();
   }
 
@@ -22,7 +23,7 @@ class NotifierService {
 
   async requestPermission() {
     if (!('Notification' in window)) {
-      alert('ERROR: Web Notifications not supported by your browser.');
+      if (window.toast) window.toast.error('Web Notifications are not supported by this browser.');
       return false;
     }
     try {
@@ -53,18 +54,32 @@ class NotifierService {
     for (const item of reminders) {
       if (item.isCompleted) continue;
 
-      const targetTime = item.snoozedUntil || item.dueAt;
+      const targetTime = window.storage.getReminderDueAt(item);
       if (!targetTime) continue;
 
       // If the reminder is due (or overdue by <= 48 hours) and hasn't been triggered yet
-      if (targetTime <= now && !item.isTriggered) {
+      const isWithin48h = (now - targetTime) <= (48 * 60 * 60 * 1000);
+      if (targetTime <= now && isWithin48h && !item.isTriggered) {
         this.triggerAlarm(item);
         break; // Trigger one alarm at a time to prevent modal stacking
+      } else if (targetTime <= now && !isWithin48h && !item.isTriggered) {
+        // Stale reminder from > 48 hours ago: silently mark as triggered to prevent alarm cascade
+        window.storage.updateReminder(item.id, { isTriggered: true });
       }
     }
   }
 
   triggerAlarm(item) {
+    // Never replace an alarm the user is currently looking at: queue it
+    // and present it once the active one is handled.
+    if (this.activeAlarmItem) {
+      if (!this.pendingAlarms.some(a => a.id === item.id)) {
+        this.pendingAlarms.push(item);
+      }
+      window.storage.updateReminder(item.id, { isTriggered: true });
+      return;
+    }
+
     this.activeAlarmItem = item;
 
     // Mark as triggered in storage so it doesn't repeatedly fire every tick
@@ -120,18 +135,38 @@ class NotifierService {
 
   closeAlarmModal() {
     const dialog = document.getElementById('alarm-dialog');
-    if (!dialog) return;
-    if (typeof dialog.close === 'function') {
+    if (dialog && typeof dialog.close === 'function' && dialog.open) {
       dialog.close();
-    } else {
+    } else if (dialog) {
       dialog.removeAttribute('open');
     }
     this.activeAlarmItem = null;
+    this.showNextQueuedAlarm();
+  }
+
+  /**
+   * Presents the next alarm that came due while one was already on screen.
+   */
+  showNextQueuedAlarm() {
+    if (this.activeAlarmItem || this.pendingAlarms.length === 0) return;
+    const next = this.pendingAlarms.shift();
+    if (next) {
+      setTimeout(() => this.triggerAlarm(next), 350);
+    }
   }
 
   setupModalControls() {
     const dialog = document.getElementById('alarm-dialog');
     if (!dialog) return;
+
+    // Native ESC dismissal bypasses our buttons: make sure state is
+    // cleaned up and any queued alarm still gets presented.
+    dialog.addEventListener('close', () => {
+      if (this.activeAlarmItem) {
+        this.activeAlarmItem = null;
+        this.showNextQueuedAlarm();
+      }
+    });
 
     // Complete button
     const btnDone = document.getElementById('btn-alarm-done');
@@ -148,7 +183,7 @@ class NotifierService {
     document.querySelectorAll('[data-snooze]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         if (!this.activeAlarmItem) return;
-        const type = e.target.getAttribute('data-snooze');
+        const type = e.currentTarget.getAttribute('data-snooze');
         this.snoozeAlarm(this.activeAlarmItem, type);
         this.closeAlarmModal();
         if (window.audio) window.audio.playClick();
@@ -178,16 +213,30 @@ class NotifierService {
   }
 
   advanceRecurringReminder(item) {
-    const currentDate = new Date(`${item.date}T${item.time || '09:00'}:00`);
-    let nextDate = new Date(currentDate);
-
-    if (item.repeat === 'DAILY') {
-      nextDate.setDate(nextDate.getDate() + 1);
-    } else if (item.repeat === 'WEEKLY') {
-      nextDate.setDate(nextDate.getDate() + 7);
-    } else if (item.repeat === 'MONTHLY') {
-      nextDate.setMonth(nextDate.getMonth() + 1);
+    let baseTime = item.dueAt;
+    if (!baseTime || isNaN(baseTime)) {
+      const timeStr = item.time || '09:00';
+      const parts = timeStr.split(':');
+      const d = new Date(item.date);
+      d.setHours(parseInt(parts[0], 10) || 9, parseInt(parts[1], 10) || 0, 0, 0);
+      baseTime = d.getTime();
     }
+
+    let nextDate = new Date(baseTime);
+    const now = Date.now();
+
+    // Loop until nextDate is strictly in the future
+    do {
+      if (item.repeat === 'DAILY') {
+        nextDate.setDate(nextDate.getDate() + 1);
+      } else if (item.repeat === 'WEEKLY') {
+        nextDate.setDate(nextDate.getDate() + 7);
+      } else if (item.repeat === 'MONTHLY') {
+        nextDate.setMonth(nextDate.getMonth() + 1);
+      } else {
+        break;
+      }
+    } while (nextDate.getTime() <= now);
 
     const yyyy = nextDate.getFullYear();
     const mm = String(nextDate.getMonth() + 1).padStart(2, '0');
@@ -210,6 +259,9 @@ class NotifierService {
     switch (type) {
       case '5m':
         snoozedUntil = now + (5 * 60 * 1000);
+        break;
+      case '10m':
+        snoozedUntil = now + (10 * 60 * 1000);
         break;
       case '15m':
         snoozedUntil = now + (15 * 60 * 1000);

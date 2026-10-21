@@ -8,10 +8,20 @@ const LEGACY_STORAGE_KEY = 'memory_core_vault_v1';
 
 class StorageService {
   constructor() {
+    this.cache = null;
+    this.vaultEventTimer = null;
     this.initDefaultData();
   }
 
+  /**
+   * Returns the live in-memory vault. All mutators MUST call saveVault()
+   * afterwards so the cache and localStorage stay in sync.
+   * Caching avoids re-parsing the full JSON blob on every single read,
+   * which used to happen several times per rendered list item.
+   */
   getVault() {
+    if (this.cache) return this.cache;
+
     try {
       let raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
@@ -22,23 +32,38 @@ class StorageService {
       }
       if (!raw) return this.getDefaultSchema();
       const parsed = JSON.parse(raw);
-      return {
+      this.cache = {
         reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
         passwords: Array.isArray(parsed.passwords) ? parsed.passwords : [],
         feeds: Array.isArray(parsed.feeds) ? parsed.feeds : this.getDefaultFeeds(),
         rssArticles: Array.isArray(parsed.rssArticles) ? parsed.rssArticles : this.getDefaultArticles(),
         settings: Object.assign(this.getDefaultSettings(), parsed.settings || {})
       };
+      return this.cache;
     } catch (err) {
       console.error('[STORAGE] Error parsing vault:', err);
       return this.getDefaultSchema();
     }
   }
 
-  saveVault(vault) {
+  /**
+   * Coalesces bursty write sequences (bulk GitHub pull, multi-feed refresh)
+   * into a single re-render pass instead of one full DOM rebuild per write.
+   */
+  scheduleVaultUpdated(vault) {
+    if (this.vaultEventTimer) return;
+    this.vaultEventTimer = setTimeout(() => {
+      this.vaultEventTimer = null;
+      window.dispatchEvent(new CustomEvent('vault-updated', { detail: this.cache || vault }));
+    }, 60);
+  }
+
+  saveVault(vault, options = {}) {
+    const silent = !!options.silent;
     try {
+      this.cache = vault;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(vault));
-      window.dispatchEvent(new CustomEvent('vault-updated', { detail: vault }));
+      if (!silent) this.scheduleVaultUpdated(vault);
       return true;
     } catch (err) {
       console.error('[STORAGE] Error writing vault:', err);
@@ -212,6 +237,22 @@ class StorageService {
     return this.getVault().reminders;
   }
 
+  /**
+   * Resolves the effective due timestamp for a reminder.
+   * Falls back to composing date + time so imported/legacy entries
+   * without a stored dueAt are not treated as permanently overdue.
+   */
+  getReminderDueAt(item) {
+    if (!item) return 0;
+    if (item.snoozedUntil) return item.snoozedUntil;
+    if (item.dueAt) return item.dueAt;
+    if (item.date) {
+      const composed = new Date(`${item.date}T${item.time || '09:00'}:00`).getTime();
+      if (!isNaN(composed)) return composed;
+    }
+    return 0;
+  }
+
   getRemindersForDate(dateStr) {
     return this.getReminders().filter(r => r.date === dateStr);
   }
@@ -224,7 +265,9 @@ class StorageService {
       details: (reminderData.details || '').trim(),
       date: reminderData.date, // 'YYYY-MM-DD'
       time: reminderData.time || '09:00', // 'HH:MM'
-      dueAt: reminderData.dueAt || new Date(`${reminderData.date}T${reminderData.time || '09:00'}:00`).getTime(),
+      dueAt: reminderData.dueAt ||
+        new Date(`${reminderData.date}T${reminderData.time || '09:00'}:00`).getTime() ||
+        Date.now(),
       repeat: reminderData.repeat || 'NONE', // 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY'
       priority: reminderData.priority || 'NORMAL', // 'NORMAL' | 'HIGH' | 'URGENT'
       isCompleted: false,
@@ -300,6 +343,37 @@ class StorageService {
     const vault = this.getVault();
     vault.passwords = vault.passwords.filter(p => p.id !== id);
     this.saveVault(vault);
+  }
+
+  upsertPassEntry(passData) {
+    const vault = this.getVault();
+    const cleanPath = (passData.path || '').trim();
+    if (!cleanPath) return null;
+
+    const existingIdx = vault.passwords.findIndex(p => p.path === cleanPath);
+    if (existingIdx !== -1) {
+      vault.passwords[existingIdx] = {
+        ...vault.passwords[existingIdx],
+        ...passData,
+        path: cleanPath,
+        updatedAt: Date.now()
+      };
+      this.saveVault(vault);
+      return vault.passwords[existingIdx];
+    } else {
+      const item = {
+        id: 'pass_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        path: cleanPath,
+        username: (passData.username || '').trim(),
+        password: passData.password || '',
+        notes: (passData.notes || '').trim(),
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      vault.passwords.push(item);
+      this.saveVault(vault);
+      return item;
+    }
   }
 
   // --- Settings ---
@@ -554,11 +628,17 @@ ${outlines}
   exportSyncJSON() {
     const vault = this.getVault();
     const cleanSettings = { ...vault.settings };
-    // Never commit secret tokens to remote repositories to avoid push protection blocks & security leaks
+    // Never commit secret tokens or sensitive keys to remote repositories to avoid leaks
     delete cleanSettings.githubToken;
+    delete cleanSettings.gpgKey;
+    delete cleanSettings.gpgPassphrase;
+    delete cleanSettings.gpgRecipientId;
+
+    // SECURITY: Purge all passwords from remote sync payload completely.
+    // Storing password repositories on GitHub is a security risk. Passwords remain 100% local on device.
     const syncVault = {
       reminders: vault.reminders || [],
-      passwords: vault.passwords || [],
+      passwords: [], // Purged: never sent to GitHub
       feeds: vault.feeds || [],
       rssArticles: vault.rssArticles || [],
       settings: cleanSettings
@@ -566,7 +646,7 @@ ${outlines}
     return JSON.stringify(syncVault, null, 2);
   }
 
-  importJSON(jsonString) {
+  importJSON(jsonString, isRemoteSync = false) {
     try {
       const parsed = JSON.parse(jsonString);
       if (!parsed || (typeof parsed !== 'object')) {
@@ -591,9 +671,15 @@ ${outlines}
         mergedSettings.githubPath = currentSettings.githubPath;
       }
 
+      // Preserve local passwords on remote pull so passwords are not wiped
+      let resolvedPasswords = currentVault.passwords || [];
+      if (!isRemoteSync && Array.isArray(parsed.passwords) && parsed.passwords.length > 0) {
+        resolvedPasswords = parsed.passwords;
+      }
+
       const vault = {
         reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
-        passwords: Array.isArray(parsed.passwords) ? parsed.passwords : [],
+        passwords: resolvedPasswords,
         feeds: Array.isArray(parsed.feeds) ? parsed.feeds : this.getDefaultFeeds(),
         rssArticles: Array.isArray(parsed.rssArticles) ? parsed.rssArticles : [],
         settings: mergedSettings
@@ -621,6 +707,7 @@ ${outlines}
   resetAll() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(LEGACY_STORAGE_KEY);
+    this.cache = null;
     this.initDefaultData();
   }
 }

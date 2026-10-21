@@ -96,7 +96,7 @@ class AppCoordinator {
     const feeds = window.storage.getFeeds ? window.storage.getFeeds() : [];
 
     const activeReminders = reminders.filter(r => !r.isCompleted);
-    const overdueReminders = activeReminders.filter(r => (r.snoozedUntil || r.dueAt) < Date.now());
+    const overdueReminders = activeReminders.filter(r => window.storage.getReminderDueAt(r) < Date.now());
 
     const remCountEl = document.getElementById('header-rem-count');
     const passCountEl = document.getElementById('header-pass-count');
@@ -250,104 +250,22 @@ class AppCoordinator {
         if (window.notifier) {
           const granted = await window.notifier.requestPermission();
           this.updateHeaderMetrics();
-          if (granted && window.audio) window.audio.playSuccess();
+          if (granted && window.toast) window.toast.success('Notifications enabled.');
         }
       });
     }
 
-    // Keyboard shortcut Escape closes modal
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const dialog = document.getElementById('alarm-dialog');
-        if (dialog && (dialog.open || dialog.hasAttribute('open'))) {
-          if (window.notifier) window.notifier.closeAlarmModal();
-        }
-        const rssDialog = document.getElementById('rss-reader-dialog');
-        if (rssDialog && (rssDialog.open || rssDialog.hasAttribute('open'))) {
-          if (window.rssViewer) window.rssViewer.closeReaderModal();
-        }
-        const settingsDialog = document.getElementById('settings-dialog');
-        if (settingsDialog && (settingsDialog.open || settingsDialog.hasAttribute('open'))) {
-          this.closeSettingsModal();
-        }
-      }
-    });
+    // Native ESC dismissal closes <dialog> elements on its own, but module
+    // state still needs resetting. The alarm dialog is handled in notifier.js.
+    const rssDialog = document.getElementById('rss-reader-dialog');
+    if (rssDialog) {
+      rssDialog.addEventListener('close', () => {
+        if (window.rssViewer) window.rssViewer.currentArticleId = null;
+      });
+    }
   }
 
   setupSettingsActions() {
-    // Sound Test
-    const btnTestSound = document.getElementById('btn-test-sound');
-    if (btnTestSound) {
-      btnTestSound.addEventListener('click', () => {
-        if (window.audio) window.audio.playAlarm();
-      });
-    }
-
-    // Notification Test
-    const btnTestNotif = document.getElementById('btn-test-notif');
-    if (btnTestNotif) {
-      btnTestNotif.addEventListener('click', async () => {
-        if (window.notifier) {
-          const granted = await window.notifier.requestPermission();
-          if (granted) {
-            new Notification('! TEST ALARM: MEIL', {
-              body: 'System notifications and sound are operational!',
-              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23000" width="100" height="100"/><text y=".75em" x=".15em" font-size="70" font-family="monospace" font-weight="bold" fill="%23ffd700">!</text></svg>'
-            });
-            if (window.audio) window.audio.playSuccess();
-          } else {
-            alert('ERROR: Notifications permission not granted by browser.');
-          }
-        }
-      });
-    }
-
-    // Export JSON Backup
-    const btnExportJSON = document.getElementById('btn-export-json');
-    if (btnExportJSON) {
-      btnExportJSON.addEventListener('click', () => {
-        const json = window.storage.exportJSON();
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `meil_vault_${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        if (window.audio) window.audio.playSuccess();
-      });
-    }
-
-    // Import JSON Backup
-    const fileImportInput = document.getElementById('file-import-input');
-    const btnImportJSON = document.getElementById('btn-import-json');
-
-    if (btnImportJSON && fileImportInput) {
-      btnImportJSON.addEventListener('click', () => {
-        fileImportInput.click();
-      });
-
-      fileImportInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = window.storage.importJSON(event.target.result);
-          if (result.success) {
-            alert(`OK: Backup successfully imported!\nReminders: ${result.countReminders}\nPasswords: ${result.countPasswords}\nFeeds: ${result.countFeeds || 0}`);
-            if (window.audio) window.audio.playSuccess();
-          } else {
-            alert(`ERROR: Failed to import: ${result.error}`);
-          }
-          fileImportInput.value = '';
-        };
-        reader.readAsText(file);
-      });
-    }
-
     // Sound Enabled toggle
     const toggleSound = document.getElementById('settings-sound-toggle');
     if (toggleSound) {
@@ -356,31 +274,6 @@ class AppCoordinator {
       toggleSound.addEventListener('change', (e) => {
         window.storage.updateSettings({ soundEnabled: e.target.checked });
         if (window.audio) window.audio.playClick();
-      });
-    }
-
-    // Purge completed reminders
-    const btnPurgeCompleted = document.getElementById('btn-purge-completed');
-    if (btnPurgeCompleted) {
-      btnPurgeCompleted.addEventListener('click', () => {
-        if (confirm('PROMPT: Purge all completed reminders?')) {
-          const removed = window.storage.clearCompletedReminders();
-          alert(`OK: Purged ${removed} completed reminder(s).`);
-          if (window.audio) window.audio.playClick();
-        }
-      });
-    }
-
-    // Factory Reset
-    const btnResetAll = document.getElementById('btn-reset-all');
-    if (btnResetAll) {
-      btnResetAll.addEventListener('click', () => {
-        const phrase = prompt('DANGER ZONE: Type "DELETE" to wipe all data and reset to defaults:');
-        if (phrase === 'DELETE') {
-          window.storage.resetAll();
-          alert('OK: MEIL reset completed.');
-          location.reload();
-        }
       });
     }
   }

@@ -1,19 +1,44 @@
 /**
  * github_sync.js - Direct GitHub REST API Cloud Sync Engine
- * Allows mobile and desktop browser to push and pull the memory vault directly
- * to/from a private or public GitHub repository (e.g. Unix pass password store).
+ *
+ * Security Architecture:
+ * - Backs up reminders, calendar tasks, and RSS feed configurations.
+ * - SECURITY NOTICE: Passwords are kept strictly local-only on the device
+ *   and are PURGED from all GitHub sync operations. No credentials or
+ *   private keys are ever committed or sent to remote GitHub repositories.
  */
 
 class GitHubSyncService {
   constructor() {
     this.isSyncing = false;
     this.currentSha = null;
+    this.lastAutoPullAt = 0;
     this.init();
   }
 
   init() {
     this.setupEventListeners();
     this.updateStatusBadge();
+
+    // Auto-pull on boot if GitHub is configured
+    setTimeout(() => {
+      const settings = window.storage ? window.storage.getSettings() : {};
+      if (settings.githubToken && settings.githubRepo) {
+        this.pullVault(false);
+      }
+    }, 600);
+
+    // Auto-pull when the user returns to the tab (throttled to 5 minutes)
+    window.addEventListener('focus', () => {
+      const settings = window.storage ? window.storage.getSettings() : {};
+      if (!settings.githubToken || !settings.githubRepo || this.isSyncing) return;
+
+      const now = Date.now();
+      if (now - this.lastAutoPullAt < (5 * 60 * 1000)) return;
+
+      this.pullVault(false);
+    });
+
     window.addEventListener('vault-updated', () => {
       const settings = window.storage ? window.storage.getSettings() : {};
       if (settings.autoSync && settings.githubToken && settings.githubRepo) {
@@ -47,7 +72,6 @@ class GitHubSyncService {
 
   getAuthHeaders(token) {
     const cleanToken = (token || '').trim();
-    // GitHub API supports Bearer for both classic (ghp_) and fine-grained (github_pat_) tokens
     const authVal = (cleanToken.startsWith('Bearer ') || cleanToken.startsWith('token '))
       ? cleanToken
       : `Bearer ${cleanToken}`;
@@ -94,16 +118,16 @@ class GitHubSyncService {
     }
 
     if (status === 401) {
-      return `Authentication Failed (HTTP 401): Invalid or expired GitHub Personal Access Token. Please check that your token is valid.`;
+      return `Authentication Failed (HTTP 401): Invalid or expired GitHub Personal Access Token. Check your token in Settings.`;
     }
     if (status === 403) {
       if (parsedMsg.toLowerCase().includes('rate limit')) {
         return `GitHub API rate limit exceeded. Please wait a moment before trying again.`;
       }
-      return `Access Denied (HTTP 403): Personal Access Token does not have permission. For private password repositories, ensure your PAT has 'repo' scope enabled.`;
+      return `Access Denied (HTTP 403): Personal Access Token does not have permission. Ensure your PAT has repository access.`;
     }
     if (status === 404) {
-      return `Not Found (HTTP 404): Repository or branch not found. Verify repository name ('owner/repo') and branch. For private repositories, ensure the token has 'repo' scope.`;
+      return `Not Found (HTTP 404): Repository or branch not found. Verify repository name ('owner/repo') and that your token has access to it.`;
     }
     if (status === 409) {
       if (parsedMsg.toLowerCase().includes('secret') || parsedMsg.toLowerCase().includes('push-protection')) {
@@ -196,7 +220,7 @@ class GitHubSyncService {
 
     if (btnSaveSettings) {
       btnSaveSettings.addEventListener('click', () => {
-        this.saveSettingsFromForm();
+        this.saveSettingsFromForm().catch(err => console.error('[GH] Save settings failed:', err));
       });
     }
 
@@ -206,15 +230,15 @@ class GitHubSyncService {
       });
     }
 
-    if (btnPush) {
-      btnPush.addEventListener('click', () => {
-        this.pushVault(true);
-      });
-    }
-
     if (btnPull) {
       btnPull.addEventListener('click', () => {
         this.pullVault(true);
+      });
+    }
+
+    if (btnPush) {
+      btnPush.addEventListener('click', () => {
+        this.pushVault(true);
       });
     }
 
@@ -238,7 +262,7 @@ class GitHubSyncService {
 
     if (tokenInput && settings.githubToken) tokenInput.value = settings.githubToken;
     if (repoInput && settings.githubRepo) repoInput.value = settings.githubRepo;
-    if (branchInput) branchInput.value = settings.githubBranch || 'main';
+    if (branchInput) branchInput.value = settings.githubBranch || '';
     if (pathInput) pathInput.value = settings.githubPath || 'memory_vault.json';
     if (autoSyncToggle) autoSyncToggle.checked = !!settings.autoSync;
 
@@ -248,23 +272,23 @@ class GitHubSyncService {
     }
   }
 
-  saveSettingsFromForm() {
+  async saveSettingsFromForm() {
     const tokenInput = document.getElementById('gh-token-input');
     const repoInput = document.getElementById('gh-repo-input');
     const branchInput = document.getElementById('gh-branch-input');
     const pathInput = document.getElementById('gh-path-input');
 
+    const existing = window.storage ? window.storage.getSettings() : {};
+
     const githubToken = tokenInput ? tokenInput.value.trim() : '';
     let githubRepo = repoInput ? this.normalizeRepo(repoInput.value) : '';
-    let githubBranch = branchInput ? this.normalizeBranch(branchInput.value) : '';
-    let githubPath = pathInput ? this.normalizePath(pathInput.value) : 'memory_vault.json';
+    let githubBranch = branchInput ? this.normalizeBranch(branchInput.value) : this.normalizeBranch(existing.githubBranch);
+    let githubPath = pathInput ? this.normalizePath(pathInput.value) : this.normalizePath(existing.githubPath);
 
     if (githubRepo && !githubRepo.includes('/')) {
-      alert("ERROR: Invalid repository format. Please enter 'owner/repo' (e.g. jaigansa/pass-store).");
+      if (window.toast) window.toast.error("Invalid repository format. Use 'owner/repo' or a full GitHub URL.");
       return;
     }
-
-    if (!githubBranch) githubBranch = 'main';
 
     window.storage.updateSettings({
       githubToken,
@@ -274,13 +298,16 @@ class GitHubSyncService {
     });
 
     if (repoInput) repoInput.value = githubRepo;
-    if (branchInput) branchInput.value = githubBranch;
-    if (pathInput) pathInput.value = githubPath;
 
     this.updateStatusBadge();
-    this.updateSyncDetails(`Saved: ${githubRepo || 'No repo'} (${githubBranch})`);
-    if (window.audio) window.audio.playSuccess();
-    alert('OK: GitHub configuration committed to local settings.');
+    this.updateSyncDetails(`Saved: ${githubRepo || 'No repo'}. Ready to sync.`);
+
+    // Trigger auto-sync if credentials provided
+    if (githubToken && githubRepo) {
+      this.pullVault(true);
+    } else {
+      if (window.toast) window.toast.success('Configuration saved.');
+    }
   }
 
   updateSyncDetails(msg) {
@@ -294,15 +321,13 @@ class GitHubSyncService {
     const tokenInput = document.getElementById('gh-token-input');
     const repoInput = document.getElementById('gh-repo-input');
     const branchInput = document.getElementById('gh-branch-input');
-    const pathInput = document.getElementById('gh-path-input');
 
     const token = tokenInput ? tokenInput.value.trim() : '';
     const repo = repoInput ? this.normalizeRepo(repoInput.value) : '';
     let branch = branchInput ? this.normalizeBranch(branchInput.value) : '';
-    const path = pathInput ? this.normalizePath(pathInput.value) : 'memory_vault.json';
 
     if (!token || !repo) {
-      alert('ERROR: Please enter both GitHub Personal Access Token and Repository (owner/repo) first.');
+      if (window.toast) window.toast.error('Enter both a GitHub token and repository URL first.');
       return;
     }
 
@@ -322,54 +347,158 @@ class GitHubSyncService {
         throw new Error(repoResult.error);
       }
 
-      // 3. Align branch if needed
       if (!branch) {
         branch = repoResult.defaultBranch || 'main';
         if (branchInput) branchInput.value = branch;
         window.storage.updateSettings({ githubBranch: branch });
-      } else if (branch !== repoResult.defaultBranch) {
-        const fileCheck = await this.getFileInfo(repo, path, branch, token);
-        if (!fileCheck.ok && fileCheck.status === 404) {
-          branch = repoResult.defaultBranch;
-          if (branchInput) branchInput.value = branch;
-          window.storage.updateSettings({ githubBranch: branch });
-        }
       }
 
-      // 4. Check if vault file exists in repo
-      const fileInfo = await this.getFileInfo(repo, path, branch, token);
-      let fileStatus = 'NOT INITIALIZED (Click PUSH TO GH to create)';
-      if (fileInfo.exists) {
-        fileStatus = `FOUND (SHA: ${fileInfo.sha ? fileInfo.sha.slice(0, 7) : 'present'})`;
-        this.currentSha = fileInfo.sha;
-      }
+      // 3. Check for vault backup file
+      const settings = window.storage ? window.storage.getSettings() : {};
+      const vaultPath = settings.githubPath || 'memory_vault.json';
+      const fileInfo = await this.getFileInfo(repo, vaultPath, branch, token);
 
       this.updateStatusBadge('GH CONFIGURED');
       this.updateSyncDetails(`Connected: @${tokenResult.username} -> ${repoResult.fullName} (${branch})`);
-      if (window.audio) window.audio.playSuccess();
 
-      alert(
-        `=== GITHUB REPOSITORY VERIFIED ===\n\n` +
-        `User Account : @${tokenResult.username}\n` +
-        `Repository   : ${repoResult.fullName} (${repoResult.isPrivate ? 'Private' : 'Public'})\n` +
-        `Branch       : ${branch} (Default: ${repoResult.defaultBranch})\n` +
-        `Target File  : ${path}\n` +
-        `File Status  : ${fileStatus}\n\n` +
-        `RESULT: GitHub API connection is fully operational!`
-      );
+      const statusMsg = `Connected: @${tokenResult.username} -> ${repoResult.fullName} (Vault: ${fileInfo.exists ? 'Found' : 'Ready to push'})`;
+      if (window.toast) {
+        window.toast.success(statusMsg, 4000);
+      }
     } catch (err) {
       this.updateStatusBadge('TEST FAILED');
       this.updateSyncDetails(`Error: ${err.message}`);
-      if (window.audio) window.audio.playAlarm();
-      alert(`ERROR: GitHub Connection Test Failed:\n\n${err.message}`);
+      if (window.toast) window.toast.error(`GitHub connection test failed: ${err.message}`);
+    }
+  }
+
+  async pullVault(isUserInitiated = false) {
+    const tokenInput = document.getElementById('gh-token-input');
+    const repoInput = document.getElementById('gh-repo-input');
+
+    // Auto-save form values if modified
+    if (tokenInput && repoInput) {
+      const inputTok = tokenInput.value.trim();
+      const inputRepo = this.normalizeRepo(repoInput.value);
+      if (inputTok && inputRepo) {
+        window.storage.updateSettings({
+          githubToken: inputTok,
+          githubRepo: inputRepo
+        });
+      }
+    }
+
+    const settings = window.storage ? window.storage.getSettings() : {};
+    if (!settings.githubToken || !settings.githubRepo) {
+      if (isUserInitiated && window.toast) {
+        window.toast.error('Enter your GitHub token and repository URL in Settings first.');
+      }
+      return;
+    }
+
+    if (this.isSyncing) return;
+    this.isSyncing = true;
+    this.lastAutoPullAt = Date.now();
+    this.updateStatusBadge('PULLING...');
+    this.updateSyncDetails('Connecting to GitHub repository...');
+
+    try {
+      const repo = this.normalizeRepo(settings.githubRepo);
+      const token = settings.githubToken;
+      const path = this.normalizePath(settings.githubPath);
+
+      // Check repository access
+      const repoCheck = await this.checkRepo(repo, token);
+      if (!repoCheck.ok) {
+        throw new Error(repoCheck.error || `Could not access repository ${repo}`);
+      }
+
+      let branch = (settings.githubBranch && settings.githubBranch.trim())
+        ? settings.githubBranch.trim()
+        : (repoCheck.defaultBranch || 'main');
+
+      // Fetch vault file
+      let fileInfo = await this.getFileInfo(repo, path, branch, token);
+
+      // If branch 404, check repo default branch
+      if (!fileInfo.ok && fileInfo.status === 404 && repoCheck.defaultBranch && repoCheck.defaultBranch !== branch) {
+        branch = repoCheck.defaultBranch;
+        window.storage.updateSettings({ githubBranch: branch });
+        const branchInput = document.getElementById('gh-branch-input');
+        if (branchInput) branchInput.value = branch;
+        fileInfo = await this.getFileInfo(repo, path, branch, token);
+      }
+
+      if (!fileInfo.ok && fileInfo.error) {
+        throw new Error(fileInfo.error);
+      }
+
+      if (!fileInfo.exists) {
+        this.updateStatusBadge('GH CONFIGURED');
+        this.updateSyncDetails(`Remote file '${path}' not found on branch '${branch}'. Ready to push.`);
+        if (isUserInitiated && window.toast) {
+          window.toast.info(`Connected to ${repo}. Remote '${path}' not created yet. Tap PUSH to backup.`);
+        }
+        return;
+      }
+
+      // Download content
+      let rawJson = '';
+      if (fileInfo.content) {
+        rawJson = this.base64ToUtf8(fileInfo.content);
+      } else if (fileInfo.downloadUrl) {
+        const downloadRes = await fetch(fileInfo.downloadUrl, {
+          headers: this.getAuthHeaders(token)
+        });
+        if (!downloadRes.ok) {
+          throw new Error(`Failed to download raw vault file: HTTP ${downloadRes.status}`);
+        }
+        rawJson = await downloadRes.text();
+      } else {
+        throw new Error('Remote file content is empty or unavailable.');
+      }
+
+      this.currentSha = fileInfo.sha;
+
+      // Import into storage (isRemoteSync = true preserves local passwords)
+      const importResult = window.storage.importJSON(rawJson, true);
+      if (!importResult.success) {
+        throw new Error(`Failed to parse remote vault JSON: ${importResult.error}`);
+      }
+
+      window.storage.updateSettings({
+        lastSyncedAt: Date.now(),
+        githubBranch: branch
+      });
+
+      this.updateStatusBadge('SYNCED');
+      this.updateSyncDetails(`Pulled from ${branch} at ${new Date().toLocaleTimeString()} (SHA: ${this.currentSha ? this.currentSha.slice(0, 7) : 'ok'})`);
+      if (window.audio && isUserInitiated) window.audio.playSuccess();
+
+      if (isUserInitiated && window.toast) {
+        window.toast.success(
+          `Vault pulled: ${importResult.countReminders} Reminders, ${importResult.countFeeds || 0} Feeds (Passwords kept local).`,
+          4200
+        );
+      }
+    } catch (err) {
+      console.error('[GITHUB] Pull failed:', err);
+      this.updateStatusBadge('PULL FAILED !');
+      this.updateSyncDetails(`Pull failed: ${err.message}`);
+      if (window.audio && isUserInitiated) window.audio.playAlarm();
+      if (isUserInitiated && window.toast) {
+        window.toast.error(`GitHub pull failed: ${err.message}`);
+      }
+    } finally {
+      this.isSyncing = false;
     }
   }
 
   async pushVault(isUserInitiated = false) {
     const settings = window.storage ? window.storage.getSettings() : {};
     if (!settings.githubToken || !settings.githubRepo) {
-      if (isUserInitiated) {
-        alert('ERROR: Please configure GitHub Token and Repo in Settings first.');
+      if (isUserInitiated && window.toast) {
+        window.toast.error('Configure a GitHub token and repository in Settings first.');
       }
       return;
     }
@@ -377,7 +506,7 @@ class GitHubSyncService {
     if (this.isSyncing) return;
     this.isSyncing = true;
     this.updateStatusBadge('PUSHING...');
-    this.updateSyncDetails('Pushing local memory vault to GitHub...');
+    this.updateSyncDetails('Pushing vault backup to GitHub...');
 
     try {
       const repo = this.normalizeRepo(settings.githubRepo);
@@ -385,15 +514,12 @@ class GitHubSyncService {
       let branch = this.normalizeBranch(settings.githubBranch) || 'main';
       const token = settings.githubToken;
 
-      // 1. Auto-discover or verify branch if needed
       let fileInfo = await this.getFileInfo(repo, path, branch, token);
       if (!fileInfo.ok && fileInfo.status === 404) {
         const repoCheck = await this.checkRepo(repo, token);
         if (repoCheck.ok && repoCheck.defaultBranch && repoCheck.defaultBranch !== branch) {
           branch = repoCheck.defaultBranch;
           window.storage.updateSettings({ githubBranch: branch });
-          const branchInput = document.getElementById('gh-branch-input');
-          if (branchInput) branchInput.value = branch;
           fileInfo = await this.getFileInfo(repo, path, branch, token);
         }
       }
@@ -402,7 +528,7 @@ class GitHubSyncService {
         throw new Error(fileInfo.error);
       }
 
-      // 2. Prepare payload WITHOUT githubToken to protect privacy and pass GitHub Secret Scanning
+      // SECURITY: exportSyncJSON completely strips passwords and sensitive tokens
       const contentStr = window.storage.exportSyncJSON ? window.storage.exportSyncJSON() : window.storage.exportJSON();
       const encodedContent = this.utf8ToBase64(contentStr);
 
@@ -428,7 +554,6 @@ class GitHubSyncService {
         body: JSON.stringify(body)
       });
 
-      // 3. Conflict resolution: if SHA was outdated (409), re-fetch latest SHA and retry once
       if (res.status === 409) {
         const freshInfo = await this.getFileInfo(repo, path, branch, token);
         if (freshInfo.exists && freshInfo.sha && freshInfo.sha !== body.sha) {
@@ -454,129 +579,19 @@ class GitHubSyncService {
       window.storage.updateSettings({ lastSyncedAt: Date.now() });
 
       this.updateStatusBadge('SYNCED');
-      this.updateSyncDetails(`Last pushed: ${new Date().toLocaleTimeString()} (SHA: ${this.currentSha ? this.currentSha.slice(0, 7) : 'ok'})`);
-      if (window.audio) window.audio.playSuccess();
+      this.updateSyncDetails(`Last pushed at ${new Date().toLocaleTimeString()}`);
+      if (window.audio && isUserInitiated) window.audio.playSuccess();
 
-      if (isUserInitiated) {
-        const vault = window.storage.getVault();
-        const remCount = vault.reminders ? vault.reminders.length : 0;
-        const passCount = vault.passwords ? vault.passwords.length : 0;
-        alert(
-          `OK: Vault successfully pushed to GitHub repository!\n\n` +
-          `Repository : ${repo}\n` +
-          `Branch     : ${branch}\n` +
-          `File Path  : ${path}\n` +
-          `Synced     : ${remCount} Reminders, ${passCount} Passwords`
-        );
+      if (isUserInitiated && window.toast) {
+        window.toast.success('Vault backup (reminders & feeds) pushed to GitHub.');
       }
     } catch (err) {
       console.error('[GITHUB] Push failed:', err);
       this.updateStatusBadge('SYNC FAILED !');
       this.updateSyncDetails(`Push failed: ${err.message}`);
       if (window.audio && isUserInitiated) window.audio.playAlarm();
-      if (isUserInitiated) {
-        alert(`ERROR: GitHub Push Failed:\n\n${err.message}`);
-      }
-    } finally {
-      this.isSyncing = false;
-    }
-  }
-
-  async pullVault(isUserInitiated = false) {
-    const settings = window.storage ? window.storage.getSettings() : {};
-    if (!settings.githubToken || !settings.githubRepo) {
-      if (isUserInitiated) {
-        alert('ERROR: Please configure GitHub Token and Repo in Settings first.');
-      }
-      return;
-    }
-
-    if (this.isSyncing) return;
-    this.isSyncing = true;
-    this.updateStatusBadge('PULLING...');
-    this.updateSyncDetails('Pulling latest vault from GitHub...');
-
-    try {
-      const repo = this.normalizeRepo(settings.githubRepo);
-      const path = this.normalizePath(settings.githubPath);
-      let branch = this.normalizeBranch(settings.githubBranch) || 'main';
-      const token = settings.githubToken;
-
-      let fileInfo = await this.getFileInfo(repo, path, branch, token);
-
-      // If branch 404, check repo default branch
-      if (!fileInfo.ok && fileInfo.status === 404) {
-        const repoCheck = await this.checkRepo(repo, token);
-        if (repoCheck.ok && repoCheck.defaultBranch && repoCheck.defaultBranch !== branch) {
-          branch = repoCheck.defaultBranch;
-          window.storage.updateSettings({ githubBranch: branch });
-          const branchInput = document.getElementById('gh-branch-input');
-          if (branchInput) branchInput.value = branch;
-          fileInfo = await this.getFileInfo(repo, path, branch, token);
-        }
-      }
-
-      if (!fileInfo.ok && fileInfo.error) {
-        throw new Error(fileInfo.error);
-      }
-
-      // If file does not exist on remote
-      if (!fileInfo.exists) {
-        const repoCheck = await this.checkRepo(repo, token);
-        if (repoCheck.ok) {
-          const msg = `Repository '${repo}' (branch '${branch}') is connected, but file '${path}' does not exist on GitHub yet.\n\nTo start syncing, click 'PUSH TO GH' to upload your local vault.`;
-          this.updateStatusBadge('GH CONFIGURED');
-          this.updateSyncDetails(`Remote file not found on branch '${branch}'. Ready to push.`);
-          if (isUserInitiated) alert(`NOTICE: ${msg}`);
-          return;
-        } else {
-          throw new Error(repoCheck.error || `Repository '${repo}' not found.`);
-        }
-      }
-
-      // Retrieve and decode content
-      let rawJson = '';
-      if (fileInfo.content) {
-        rawJson = this.base64ToUtf8(fileInfo.content);
-      } else if (fileInfo.downloadUrl) {
-        const downloadRes = await fetch(fileInfo.downloadUrl, {
-          headers: this.getAuthHeaders(token)
-        });
-        if (!downloadRes.ok) {
-          throw new Error(`Failed to download raw vault file: HTTP ${downloadRes.status}`);
-        }
-        rawJson = await downloadRes.text();
-      } else {
-        throw new Error('Remote file content is empty or unavailable.');
-      }
-
-      this.currentSha = fileInfo.sha;
-      const importResult = window.storage.importJSON(rawJson);
-
-      if (!importResult.success) {
-        throw new Error(`Corrupted vault data from GitHub: ${importResult.error}`);
-      }
-
-      window.storage.updateSettings({ lastSyncedAt: Date.now() });
-      this.updateStatusBadge('SYNCED');
-      this.updateSyncDetails(`Last pulled: ${new Date().toLocaleTimeString()} (SHA: ${this.currentSha ? this.currentSha.slice(0, 7) : 'ok'})`);
-      if (window.audio) window.audio.playSuccess();
-
-      if (isUserInitiated) {
-        alert(
-          `OK: Successfully pulled vault from GitHub!\n\n` +
-          `Reminders : ${importResult.countReminders}\n` +
-          `Passwords : ${importResult.countPasswords}\n` +
-          `Feeds     : ${importResult.countFeeds || 0}`
-        );
-      }
-    } catch (err) {
-      console.error('[GITHUB] Pull failed:', err);
-      this.updateStatusBadge('PULL FAILED !');
-      this.updateSyncDetails(`Pull failed: ${err.message}`);
-      if (window.audio && isUserInitiated) window.audio.playAlarm();
-      if (isUserInitiated) {
-        alert(`ERROR: GitHub Pull Failed:\n\n${err.message}`);
+      if (isUserInitiated && window.toast) {
+        window.toast.error(`GitHub push failed: ${err.message}`);
       }
     } finally {
       this.isSyncing = false;

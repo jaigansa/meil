@@ -24,8 +24,8 @@ class PassBridge {
           '=== HOW TO USE WITH UNIX PASS CLI ===\n\n' +
           '1. In Linux/macOS terminal, run:\n' +
           '   chmod +x pass_import.sh && ./pass_import.sh\n\n' +
-          '2. To sync with your GitHub repo via pass CLI:\n' +
-          '   pass git push origin main || pass git push origin master\n\n' +
+          '2. Passwords are saved to your local ~/.password-store.\n' +
+          '   (Note: Storing password repositories on public/cloud GitHub is a security risk).\n\n' +
           '3. Any password stored here can be viewed via:\n' +
           '   pass show <path>\n' +
           '   pass -c <path>  (copies password directly to clipboard)'
@@ -96,9 +96,7 @@ EOF_MEM
 
     script += `
 echo ""
-echo "[SUCCESS] Import completed! Total entries imported."
-echo "If your password-store is a git repository, push changes now:"
-echo "    pass git push origin main || pass git push origin master"
+echo "[SUCCESS] Import completed! Total entries imported into local password-store."
 `;
 
     return script;

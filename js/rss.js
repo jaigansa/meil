@@ -78,7 +78,7 @@ class RSSViewer {
       btnToggleAdd.addEventListener('click', () => {
         const isHidden = addFeedContainer.style.display === 'none';
         addFeedContainer.style.display = isHidden ? 'block' : 'none';
-        btnToggleAdd.textContent = isHidden ? '- HIDE FORM' : '+ FEED';
+        this.setToggleBtnLabel(btnToggleAdd, isHidden ? 'HIDE' : 'FEED');
         if (isHidden) {
           // Hide manage feeds if open
           const manageContainer = document.getElementById('manage-feeds-container');
@@ -101,7 +101,7 @@ class RSSViewer {
         if (isHidden) {
           // Hide add feed if open
           if (addFeedContainer) addFeedContainer.style.display = 'none';
-          if (btnToggleAdd) btnToggleAdd.textContent = '+ FEED';
+          if (btnToggleAdd) this.setToggleBtnLabel(btnToggleAdd, 'FEED');
         }
         if (window.audio) window.audio.playClick();
       });
@@ -187,13 +187,12 @@ class RSSViewer {
         reader.onload = async (event) => {
           const result = window.storage.importOPML(event.target.result);
           if (result.success) {
-            alert(`OK: OPML Imported!\nAdded: ${result.countAdded} new feed(s)\nTotal detected: ${result.total}`);
-            if (window.audio) window.audio.playSuccess();
+            if (window.toast) window.toast.success(`OPML imported: ${result.countAdded} new feed(s)`);
             this.render();
             // Automatically fetch newly imported feeds
             this.refreshAllFeeds();
           } else {
-            alert(`ERROR: Failed to import OPML: ${result.error}`);
+            if (window.toast) window.toast.error(`OPML import failed: ${result.error}`);
           }
           fileImportOPML.value = '';
         };
@@ -359,7 +358,7 @@ class RSSViewer {
     const btnSubmit = document.getElementById('btn-submit-feed');
 
     if (!inputUrl || !inputUrl.value.trim()) {
-      alert('ERROR: Please enter a valid feed URL.');
+      if (window.toast) window.toast.error('Please enter a valid feed URL.');
       return;
     }
 
@@ -374,7 +373,7 @@ class RSSViewer {
     // Check if feed already exists
     const existing = window.storage.getFeeds().find(f => f.url.toLowerCase() === url.toLowerCase());
     if (existing) {
-      alert(`INFO: Feed already subscribed (${existing.title}).`);
+      if (window.toast) window.toast.info(`Already subscribed to ${existing.title}.`);
       return;
     }
 
@@ -410,7 +409,7 @@ class RSSViewer {
   async addPreset(preset) {
     const existing = window.storage.getFeeds().find(f => f.url.toLowerCase() === preset.url.toLowerCase());
     if (existing) {
-      alert(`INFO: Already subscribed to ${preset.title}.`);
+      if (window.toast) window.toast.info(`Already subscribed to ${preset.title}.`);
       return;
     }
 
@@ -806,8 +805,9 @@ class RSSViewer {
     }
 
     if (btnOpen) {
-      btnOpen.href = art.link || '#';
-      btnOpen.style.display = art.link ? 'inline-flex' : 'none';
+      const safeLink = this.safeUrl(art.link);
+      btnOpen.href = safeLink || '#';
+      btnOpen.style.display = safeLink ? 'inline-flex' : 'none';
     }
 
     if (btnStar) {
@@ -884,11 +884,16 @@ class RSSViewer {
       const feedArts = articles.filter(a => a.feedId === f.id);
       const unread = feedArts.filter(a => !a.isRead).length;
       const unreadSuffix = unread > 0 ? ` [${unread} NEW]` : '';
-      optionsHtml += `<option value="${f.id}">${f.title}${unreadSuffix}</option>`;
+      optionsHtml += `<option value="${this.escapeHtml(f.id)}">${this.escapeHtml(f.title)}${unreadSuffix}</option>`;
     });
 
     select.innerHTML = optionsHtml;
-    select.value = currentVal;
+
+    // If the previously selected feed was deleted, fall back to ALL
+    if (currentVal !== 'ALL' && !feeds.some(f => f.id === currentVal)) {
+      this.selectedFeedId = 'ALL';
+    }
+    select.value = this.selectedFeedId;
   }
 
   renderSubscribedFeedsList() {
@@ -901,8 +906,10 @@ class RSSViewer {
     if (feeds.length === 0) {
       container.innerHTML = `
         <div class="tui-box-empty">
-          NO FEEDS SUBSCRIBED.<br>
-          Use form above or tap a preset below to add your first feed.
+          <div class="tui-empty-frame">
+            <div class="tui-empty-title">NO FEEDS SUBSCRIBED</div>
+            <div class="tui-empty-hint">Use the form or a preset below to add your first feed.</div>
+          </div>
         </div>
       `;
       return;
@@ -915,11 +922,11 @@ class RSSViewer {
       const lastSyncStr = f.lastFetchedAt ? this.formatTimeAgo(f.lastFetchedAt) : 'Never';
 
       html += `
-        <div class="tui-card feed-manage-row" data-feed-id="${f.id}">
+        <div class="tui-card feed-manage-row" data-feed-id="${this.escapeHtml(f.id)}">
           <div class="feed-info-col">
             <div class="feed-title-line">
               <span class="feed-name">> ${this.escapeHtml(f.title)}</span>
-              <span class="tui-tag">${f.category || 'GENERAL'}</span>
+              <span class="tui-tag">${this.escapeHtml(f.category || 'GENERAL')}</span>
               ${unreadCount > 0 ? `<span class="tui-tag tag-high">${unreadCount} NEW</span>` : ''}
             </div>
             <div class="feed-url-line tui-dim">${this.escapeHtml(f.url)}</div>
@@ -930,10 +937,10 @@ class RSSViewer {
             </div>
           </div>
           <div class="feed-actions-col">
-            <button class="tui-btn btn-icon" data-feed-action="refresh-feed" data-feed-id="${f.id}" title="Refresh Feed">
+            <button class="tui-btn btn-icon" data-feed-action="refresh-feed" data-feed-id="${this.escapeHtml(f.id)}" title="Refresh Feed">
               <i data-lucide="refresh-cw"></i>
             </button>
-            <button class="tui-btn btn-icon btn-danger" data-feed-action="delete-feed" data-feed-id="${f.id}" title="Unsubscribe Feed">
+            <button class="tui-btn btn-icon btn-danger" data-feed-action="delete-feed" data-feed-id="${this.escapeHtml(f.id)}" title="Unsubscribe Feed">
               <i data-lucide="trash-2"></i>
             </button>
           </div>
@@ -994,11 +1001,10 @@ class RSSViewer {
     if (articles.length === 0) {
       container.innerHTML = `
         <div class="tui-box-empty">
-          ┌──────────────────────────────────────────────┐<br>
-          │ NO HEADLINES FOUND.                          │<br>
-          │ Tap REFRESH to pull latest stories, or       │<br>
-          │ change feed filter / tabs.                   │<br>
-          └──────────────────────────────────────────────┘
+          <div class="tui-empty-frame">
+            <div class="tui-empty-title">NO HEADLINES FOUND</div>
+            <div class="tui-empty-hint">Tap REFRESH to pull latest stories, or change the feed filter / tabs.</div>
+          </div>
         </div>
       `;
       return;
@@ -1009,12 +1015,14 @@ class RSSViewer {
       const isStarred = !!art.isStarred;
       const isRead = !!art.isRead;
       const timeStr = this.formatTimeAgo(art.timestamp || art.pubDate);
+      // Only allow http(s) links: feed-supplied hrefs are attacker-controlled
+      const safeLink = this.safeUrl(art.link);
 
       html += `
-        <div class="tui-card rss-card ${isRead ? 'item-read' : 'item-unread'}" data-id="${art.id}">
+        <div class="tui-card rss-card ${isRead ? 'item-read' : 'item-unread'}" data-id="${this.escapeHtml(art.id)}">
           <div class="rss-card-top">
             <span class="tui-tag rss-feed-badge">${this.escapeHtml(art.feedTitle)}</span>
-            <span class="tui-tag rss-cat-badge">${art.category || 'GENERAL'}</span>
+            <span class="tui-tag rss-cat-badge">${this.escapeHtml(art.category || 'GENERAL')}</span>
             <span class="rss-time-ago tui-dim">${timeStr}</span>
             ${!isRead ? '<span class="rss-unread-dot"># NEW</span>' : ''}
           </div>
@@ -1029,8 +1037,8 @@ class RSSViewer {
             <button class="tui-btn btn-highlight" data-action="read-modal">
               READ
             </button>
-            ${art.link ? `
-              <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="tui-btn btn-icon" title="Open Link in Browser">
+            ${safeLink ? `
+              <a href="${this.escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer" class="tui-btn btn-icon" title="Open Link in Browser">
                 <i data-lucide="external-link"></i>
               </a>
             ` : ''}
@@ -1040,9 +1048,11 @@ class RSSViewer {
             <button class="tui-btn btn-icon" data-action="toggle-read" title="${isRead ? 'Mark as Unread' : 'Mark as Read'}">
               <i data-lucide="${isRead ? 'check-check' : 'check'}"></i>
             </button>
-            <button class="tui-btn btn-icon" data-action="copy-link" title="Copy Link URL">
-              <i data-lucide="copy"></i>
-            </button>
+            ${safeLink ? `
+              <button class="tui-btn btn-icon" data-action="copy-link" title="Copy Link URL">
+                <i data-lucide="copy"></i>
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -1112,9 +1122,7 @@ class RSSViewer {
 
   cleanSnippet(htmlOrText, maxLen = 220) {
     if (!htmlOrText) return '';
-    const tmp = document.createElement('div');
-    tmp.innerHTML = htmlOrText;
-    const clean = (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+    const clean = htmlOrText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     if (clean.length <= maxLen) return clean;
     return clean.slice(0, maxLen).trim() + '...';
   }
@@ -1178,6 +1186,30 @@ class RSSViewer {
 
     const d = new Date(ts);
     return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
+
+  /**
+   * Updates the text label of an icon+label button without wiping its icon.
+   */
+  setToggleBtnLabel(btn, label) {
+    if (!btn) return;
+    const labelEl = btn.querySelector('.btn-label');
+    if (labelEl) {
+      labelEl.textContent = label;
+    } else {
+      btn.textContent = label;
+    }
+  }
+
+  /**
+   * Accepts only http(s) URLs. Feed-supplied links are untrusted, so this
+   * blocks javascript:, data: and other script-bearing schemes.
+   */
+  safeUrl(url) {
+    if (!url) return '';
+    const trimmed = String(url).trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return '';
   }
 
   escapeHtml(str) {

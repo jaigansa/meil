@@ -32,13 +32,27 @@ class CalendarView {
   }
 
   prevMonth() {
+    this.currentDate.setDate(1);
     this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+    const today = new Date();
+    if (this.currentDate.getFullYear() === today.getFullYear() && this.currentDate.getMonth() === today.getMonth()) {
+      this.selectedDateStr = this.formatDate(today);
+    } else {
+      this.selectedDateStr = this.formatDate(this.currentDate);
+    }
     this.render();
     if (window.audio) window.audio.playClick();
   }
 
   nextMonth() {
+    this.currentDate.setDate(1);
     this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+    const today = new Date();
+    if (this.currentDate.getFullYear() === today.getFullYear() && this.currentDate.getMonth() === today.getMonth()) {
+      this.selectedDateStr = this.formatDate(today);
+    } else {
+      this.selectedDateStr = this.formatDate(this.currentDate);
+    }
     this.render();
     if (window.audio) window.audio.playClick();
   }
@@ -160,11 +174,10 @@ class CalendarView {
       if (isSelected) cellClasses.push('is-selected');
       if (remCount > 0) cellClasses.push('has-reminder');
 
-      const marker = remCount > 0 ? `<span class="rem-dot" title="${remCount} reminder(s)">*</span>` : '';
-
       html += `
-        <div class="${cellClasses.join(' ')}" data-date="${dateStr}">
-          <span class="day-num">${ddStr}</span>${marker}
+        <div class="${cellClasses.join(' ')}" data-date="${dateStr}" role="button" tabindex="0"
+             aria-label="${dateStr}${remCount > 0 ? `, ${remCount} reminder(s)` : ''}"${isSelected ? ' aria-pressed="true"' : ''}>
+          <span class="day-num">${ddStr}</span>
         </div>
       `;
     }
@@ -173,9 +186,16 @@ class CalendarView {
 
     // Attach click handlers to day cells
     gridEl.querySelectorAll('.cal-day').forEach(cell => {
-      cell.addEventListener('click', () => {
+      const activate = () => {
         const dateStr = cell.getAttribute('data-date');
         this.selectDate(dateStr);
+      };
+      cell.addEventListener('click', activate);
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate();
+        }
       });
     });
   }
@@ -199,10 +219,10 @@ class CalendarView {
     if (reminders.length === 0) {
       container.innerHTML = `
         <div class="tui-box-empty">
-          ┌──────────────────────────────────────────────┐<br>
-          │ NO REMINDERS SCHEDULED FOR THIS DATE.        │<br>
-          │ Use prompt below to add a reminder or task.  │<br>
-          └──────────────────────────────────────────────┘
+          <div class="tui-empty-frame">
+            <div class="tui-empty-title">NO REMINDERS SCHEDULED</div>
+            <div class="tui-empty-hint">Use the prompt below to add a reminder or task.</div>
+          </div>
         </div>
       `;
       return;
@@ -210,7 +230,7 @@ class CalendarView {
 
     let listHtml = '';
     reminders.forEach(item => {
-      const isOverdue = !item.isCompleted && (item.snoozedUntil || item.dueAt) < Date.now();
+      const isOverdue = !item.isCompleted && window.storage.getReminderDueAt(item) < Date.now();
       const statusBoxClass = isOverdue ? 'item-overdue' : (item.isCompleted ? 'item-completed' : 'item-active');
 
       const repeatTag = item.repeat !== 'NONE' ? `<span class="tui-tag">RPT: ${item.repeat}</span>` : '';
@@ -259,7 +279,12 @@ class CalendarView {
 
       if (btnDone) {
         btnDone.addEventListener('click', () => {
-          window.storage.toggleReminderComplete(id);
+          const item = window.storage.getReminders().find(r => r.id === id);
+          if (item && item.repeat && item.repeat !== 'NONE' && window.notifier) {
+            window.notifier.completeAlarm(item);
+          } else {
+            window.storage.toggleReminderComplete(id);
+          }
           if (window.audio) window.audio.playSuccess();
         });
       }
